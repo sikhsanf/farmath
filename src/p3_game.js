@@ -5,6 +5,7 @@ const AV = {
   n: '<svg viewBox="0 0 64 64"><circle cx="32" cy="9" r="8" fill="#dadade"/><circle cx="32" cy="38" r="17" fill="#f1c9a0"/><path d="M13 40Q11 12 32 12Q53 12 51 40Q47 26 32 25Q17 26 13 40z" fill="#dadade"/><circle cx="25" cy="38" r="5.5" fill="none" stroke="#444" stroke-width="2"/><circle cx="39" cy="38" r="5.5" fill="none" stroke="#444" stroke-width="2"/><path d="M30.5 37h3" stroke="#444" stroke-width="2"/><circle cx="25" cy="38" r="1.8" fill="#2b2b2b"/><circle cx="39" cy="38" r="1.8" fill="#2b2b2b"/><path d="M26 47q6 5 12 0" fill="none" stroke="#b5533c" stroke-width="2.4" stroke-linecap="round"/><circle cx="20" cy="45" r="2.8" fill="#f2a6a0"/><circle cx="44" cy="45" r="2.8" fill="#f2a6a0"/></svg>'
 };
 let T = null, paused = false, started = false, tm = 0;
+let FM = null; /* farm mode: the plot the child is working on (plant, water, harvest without leaving) */
 let picks = [];
 
 function showBubble(who, text) {
@@ -149,9 +150,9 @@ function tip(who, text, dur) {
   if (T) { nudge(text); return; }
   showBubble(who, text); bnum.textContent = ''; setDots([]); say(text, who); tipT = dur || 3;
 }
-function tipEnd() { hideBubble(); notifO = null; setHL([]); focus(FOC.overview); }
+function tipEnd() { hideBubble(); notifO = null; setHL([]); focus(FM != null ? FOC.plot(FM) : FOC.overview); }
 function checkNotif() {
-  if (T || tipT > 0) return;
+  if (T || tipT > 0 || FM != null) return;
   for (const o of OFR) {
     if (!o.ghost.g.visible) continue;
     const key = o.id + ':' + S.unl.plots + ':' + S.hens;
@@ -227,7 +228,7 @@ function complete(msg, coins) {
 function endTask() {
   const t = T; if (TK[t.type].cleanup) TK[t.type].cleanup();
   hideChoices(); hideBubble(); T = null; if (t.type !== 'pay') S.done++; save(); updateHud(); refreshOffers();
-  focus(FOC.overview); plGo(HUB.x, HUB.z);
+  if (FM != null && (t.type === 'plant' || t.type === 'water' || t.type === 'harvest')) focus(FOC.plot(FM)); else { focus(FOC.overview); plGo(HUB.x, HUB.z); }
   if (t.type === 'plant' && S.tut === 0) advTut(1); else if (t.type === 'water' && S.tut === 1) advTut(2); else if (t.type === 'harvest' && S.tut === 3) advTut(4);
 }
 const kakekBusy = () => { if (!S.bld) return false; tip('k', `Kakek lagi bikin ${ofrById(S.bld.id).label}. Tunggu ya.`); return true; };
@@ -483,15 +484,34 @@ function ask() {
 }
 
 /* ---------- hub: the child decides what to do by tapping the farm ---------- */
+function farmAct(k, kind) {
+  if (T || kakekBusy()) return; const mx = maxN();
+  if (kind === 'plant' && cnt(k, 0)) startTask({ type: 'plant', plot: k, n: rand(1, Math.min(mx, cnt(k, 0))) });
+  else if (kind === 'water' && cnt(k, 1)) startTask({ type: 'water', plot: k, n: Math.min(cnt(k, 1), mx) });
+  else if (kind === 'harvest' && cnt(k, 3)) startTask({ type: 'harvest', plot: k, n: Math.min(cnt(k, 3), mx, 10) });
+}
+function enterFarm(k) { FM = k; focus(FOC.plot(k)); plGo(7.9, P[k].zs + 2.7); if (!S.bld) elderGo(ELD.k, 8.4, P[k].zs - .6); }
+function exitFarm() { if (FM == null) return; FM = null; setHL([]); focus(FOC.overview); plGo(HUB.x, HUB.z); }
 function tapPlot(k, pt) {
   if (T) return;
-  const sp = S.plots[k], p = P[k], mx = maxN();
+  if (FM !== k) enterFarm(k);
+  const sp = S.plots[k], p = P[k];
   const col = clamp(Math.floor(pt.x - 2), 0, 4), row = clamp(Math.floor(pt.z - p.zs), 0, 1), st = sp.cs[row * 5 + col];
   if (st === 2) { cheerCell(k, row * 5 + col); return; }
-  if (kakekBusy()) return;
-  if (st === 0) startTask({ type: 'plant', plot: k, n: rand(1, Math.min(mx, cnt(k, 0))) });
-  else if (st === 1) startTask({ type: 'water', plot: k, n: Math.min(cnt(k, 1), mx) });
-  else if (st === 3) startTask({ type: 'harvest', plot: k, n: Math.min(cnt(k, 3), mx, 10) });
+  farmAct(k, st === 0 ? 'plant' : st === 1 ? 'water' : 'harvest');
+}
+/* farm-mode toolbar: one bar with plant / water / harvest, the next useful one glows */
+const toolsEl = $('tools'); let tKey = '';
+toolsEl.innerHTML = '<div id="tooltxt"></div><div id="toolrow">' + [['plant', '🌱', 'Tanam'], ['water', '💧', 'Siram'], ['harvest', '🧺', 'Panen']].map(t => '<button class="tb" data-a="' + t[0] + '"><b class="bd"></b><span class="ti">' + t[1] + '</span><span class="tl">' + t[2] + '</span></button>').join('') + '<button class="tb tx" data-a="exit" aria-label="Selesai"><span class="ti">✕</span><span class="tl">Selesai</span></button></div>';
+toolsEl.addEventListener('click', e => { const b = e.target.closest('.tb'); if (!b) return; ac(); SFX.pop(2); if (b.dataset.a === 'exit') exitFarm(); else if (FM != null) farmAct(FM, b.dataset.a); });
+function toolsSync() {
+  const show = started && !paused && !touring && !stOn && FM != null && !T && $('tutend').hidden;
+  let key = '0'; if (show) key = '1:' + [0, 1, 2, 3].map(i => cnt(FM, i)).join(',');
+  if (key === tKey) return; tKey = key; toolsEl.hidden = !show; if (!show) return;
+  const c = [0, 1, 2, 3].map(i => cnt(FM, i)), cs = { plant: c[0], water: c[1], harvest: c[3] }, next = c[3] ? 'harvest' : c[1] ? 'water' : c[0] ? 'plant' : null;
+  toolsEl.querySelectorAll('.tb[data-a]').forEach(b => { const a = b.dataset.a; if (a === 'exit') return; b.disabled = !cs[a]; b.classList.toggle('glow', a === next); b.querySelector('.bd').textContent = cs[a] || ''; });
+  $('tooltxt').textContent = next ? '' : c[2] ? 'Sayurnya sedang tumbuh. Tap tanamannya biar semangat!' : '';
+  $('tooltxt').style.display = $('tooltxt').textContent ? '' : 'none';
 }
 /* waiting is play: tapping a growing plant cheers it on and helps it grow a bit */
 function cheerCell(k, i) {
@@ -517,8 +537,8 @@ function tryFeed() {
 let lastHg = -1, lastCust = null;
 function hubAlerts() {
   const waiting = CUST && CUST.ready && !CUST.busy, hg = hungry();
-  if (waiting && lastCust !== CUST) { lastCust = CUST; if (!S.tutC) { S.tutC = true; save(); focus(FOC.kios); notifO = true; tip('n', 'Ada pelanggan! Tap pelanggannya ya.', 4.5); setHL([padOf(CUST.g, 1.2, 1.2, .04)]); return; } }
-  if (hg && lastHg !== S.hungryAt) { lastHg = S.hungryAt; if (!S.tutH) { S.tutH = true; save(); focus(FOC.coop); notifO = true; tip('n', 'Ayam lapar! Tap karung jagungnya ya.', 4.5); setHL([padOf(SACK, 1, 1, .04)]); return; } }
+  if (waiting && lastCust !== CUST) { lastCust = CUST; if (!S.tutC && FM == null) { S.tutC = true; save(); focus(FOC.kios); notifO = true; tip('n', 'Ada pelanggan! Tap pelanggannya ya.', 4.5); setHL([padOf(CUST.g, 1.2, 1.2, .04)]); return; } }
+  if (hg && lastHg !== S.hungryAt) { lastHg = S.hungryAt; if (!S.tutH && FM == null) { S.tutH = true; save(); focus(FOC.coop); notifO = true; tip('n', 'Ayam lapar! Tap karung jagungnya ya.', 4.5); setHL([padOf(SACK, 1, 1, .04)]); return; } }
   const l = [];
   if (S.tut < 4) { const st = [0, 1, 2, 3][S.tut], c = cellsIn(0, [0, 1, 2, 3][st]); c.forEach(i => l.push(cellPad(0, i))); }
   if (hg) l.push(padOf(SACK, 1, 1, .04));
@@ -614,11 +634,13 @@ function ambientTap(d) {
 }
 
 /* ---------- world labels: price tags, stock counts, orders ---------- */
+function hookChip(key, fn) { const c = chips[key]; if (c && !c.el.onclick) { c.el.onclick = () => { ac(); SFX.pop(2); fn(); }; c.el.onpointerdown = e => e.stopPropagation(); } }
 function updateChips() {
   OFR.forEach(o => {
     const p = o.pos(), v = new THREE.Vector3(p.x, 1.8, p.z);
     if (!o.ghost.g.visible || (T && !(T.type === 'pay' && T.id === o.id))) { setChip('o' + o.id, null); return; }
-    setChip('o' + o.id, v, COIN + o.price(), S.coins >= o.price() ? 'price' : 'price dim');
+    setChip('o' + o.id, v, COIN + o.price(), S.coins >= o.price() ? 'price tap' : 'price dim tap');
+    const ce = chips['o' + o.id].el; if (!ce.onclick) { ce.onclick = () => { ac(); SFX.pop(2); offerTap(o); }; ce.onpointerdown = e => e.stopPropagation(); }
   });
   if (T && T.type === 'sell' && S.unl.kios) {
     const v = worldOf(vegHit), e = worldOf(eggHit), kc = Math.max(0, kiosCrop);
@@ -627,9 +649,11 @@ function updateChips() {
   } else { setChip('kv', null); setChip('ke', null); }
   setChip('farm', started && !T && !touring && S.fm ? new THREE.Vector3(1.5, 3.4, 1.2) : null, '🌱 ' + esc(S.fm), 'sign');
   const waiting = CUST && CUST.ready && !CUST.busy && !T;
-  setChip('co', waiting ? worldOf(CUST.g).add(new THREE.Vector3(0, 2.2, 0)) : null, '🛒 Pelanggan', 'price');
+  setChip('co', waiting ? worldOf(CUST.g).add(new THREE.Vector3(0, 2.2, 0)) : null, '🛒 Pelanggan', 'price tap');
+  hookChip('co', () => trySell());
   const hg = S.hens > 0 && hungry() && !T;
-  setChip('hg', hg ? new THREE.Vector3(SACK.position.x, 1.9, SACK.position.z) : null, '🌾 Lapar', 'price');
+  setChip('hg', hg ? new THREE.Vector3(SACK.position.x, 1.9, SACK.position.z) : null, '🌾 Lapar', 'price tap');
+  hookChip('hg', () => { exitFarm(); tryFeed(); });
   const bob = Math.sin(tm * 6) * .15;
   if (waiting) { ALERT.visible = true; const v = worldOf(CUST.g); ALERT.position.set(v.x, 2.6 + bob, v.z); }
   else if (hg) { ALERT.visible = true; ALERT.position.set(SACK.position.x, 1.5 + bob, SACK.position.z); }
@@ -690,10 +714,11 @@ canvas.addEventListener('pointerdown', e => {
   if (!started || paused || touring) return;
   ac();
   const d = pickAt(e.clientX, e.clientY); if (!d) return;
-  if (d.kind === 'hen') { ambientTap(d); if (T) T.idle = 0; else tryFeed(); return; }
+  if (d.kind === 'hen') { ambientTap(d); if (T) T.idle = 0; else { exitFarm(); tryFeed(); } return; }
   if (d.kind === 'elder') { ambientTap(d); if (T) T.idle = 0; return; }
   if (!T) {
     if (d.kind === 'plot') tapPlot(d.plot, d.pt);
+    else if (FM != null && d.kind !== 'plot' && (exitFarm(), false)) return;
     else if (d.kind === 'offer') offerTap(ofrById(d.id));
     else if (d.kind === 'sack') tryFeed();
     else if (d.kind === 'veg' || d.kind === 'egg' || d.kind === 'cust') trySell();
@@ -713,9 +738,17 @@ joy.addEventListener('pointerdown', e => { e.preventDefault(); ac(); joyId = e.p
 joy.addEventListener('pointermove', e => { if (e.pointerId === joyId) joyAt(e); });
 ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => joy.addEventListener(n, e => { if (e.pointerId === joyId) joyEnd(); }));
 const _f = new THREE.Vector3();
-const blockers = () => { const b = []; if (S.unl.coop) b.push({ x: 12, z: 3, hw: 2.2, hd: 2.2 }); if (S.unl.kios) b.push({ x: 12, z: 9.4, hw: 2.3, hd: 1.0 }); return b; };
+const rectB = (x, z, hw, hd) => ({ x0: x - hw, x1: x + hw, z0: z - hd, z1: z + hd });
+const FIXED_B = [rectB(1.5, 1.2, 1.4, 1.2), rectB(11.6, 7.1, 1.5, 1.1)].concat([[.8, 4.8], [.8, 7.8], [.8, 10.8], [5, .7], [8, .6], [15.2, 2.2]].map(t => rectB(t[0], t[1], .4, .4)));
+const blockers = () => {
+  const b = FIXED_B.slice();
+  for (let k = 0; k < S.unl.plots; k++) b.push({ x0: 1.7, x1: 7.3, z0: PZ[k] - .2, z1: PZ[k] + 2.2 });
+  if (S.unl.coop) b.push({ x0: 9.9, x1: 14.1, z0: .8, z1: 5 });
+  if (S.unl.kios) b.push({ x0: 9.9, x1: 14.1, z0: 8.4, z1: 10.4 });
+  return b;
+};
 function stepJoy(dt) {
-  const ok = started && !paused && !touring && !T && !stOn;
+  const ok = started && !paused && !touring && !T && !stOn && FM == null;
   if (joy.hidden === ok) { joy.hidden = !ok; if (!ok) joyEnd(); }
   if (!ok) return;
   const mag = Math.min(1, Math.hypot(jx, jy));
@@ -725,10 +758,13 @@ function stepJoy(dt) {
   PL.joy = true; PL.cb = null; PL.tx = PL.g.position.x + mx / m * .6; PL.tz = PL.g.position.z + mz / m * .6;
 }
 function fencePL() {
-  const p = PL.g.position; p.x = clamp(p.x, .8, 16); p.z = clamp(p.z, .8, 16.2);
+  const p = PL.g.position, R = .3; p.x = clamp(p.x, .8, 16); p.z = clamp(p.z, .8, 16.2);
   blockers().forEach(b => {
-    const dx = p.x - b.x, dz = p.z - b.z, ox = b.hw + .35 - Math.abs(dx), oz = b.hd + .35 - Math.abs(dz);
-    if (ox > 0 && oz > 0) { if (ox < oz) p.x += Math.sign(dx || 1) * ox; else p.z += Math.sign(dz || 1) * oz; }
+    const nx = clamp(p.x, b.x0, b.x1), nz = clamp(p.z, b.z0, b.z1), dx = p.x - nx, dz = p.z - nz, d = Math.hypot(dx, dz);
+    if (d >= R) return;
+    if (d > 1e-4) { p.x = nx + dx / d * R; p.z = nz + dz / d * R; return; }
+    const l = p.x - b.x0, r = b.x1 - p.x, t = p.z - b.z0, u = b.z1 - p.z, m = Math.min(l, r, t, u);
+    if (m === l) p.x = b.x0 - R; else if (m === r) p.x = b.x1 + R; else if (m === t) p.z = b.z0 - R; else p.z = b.z1 + R;
   });
 }
 
@@ -772,7 +808,7 @@ function frame(now) {
     if (S.bld && Date.now() >= S.bld.at) finishBuild();
     stepBuild(dt);
     if (S.hens > 0 && S.snd) { cluckT -= dt; if (cluckT <= 0) { cluckT = 3 + Math.random() * 6; SFX.cluck(); const h = HENS[rand(0, S.hens - 1)]; hop(h.g, .15, .25); } }
-    stepHub(dt); tutSync();
+    stepHub(dt); tutSync(); toolsSync();
   }
   updateChips();
   renderer.render(scene, camera);
