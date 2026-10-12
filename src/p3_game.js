@@ -238,10 +238,23 @@ TK.pay = {
   start() {
     const o = T.o = ofrById(T.id), p = o.pos(), pr = T.price = o.price(); T.fx = new THREE.Vector3(p.x, 1.2, p.z); T.who = o.who;
     focus(o.focus()); const sp = o.pl(); plGo(sp.x, sp.z);
-    header(o.who, `${cap(o.verb)} ${o.label}! Butuh ${numWord(pr)} koin. Taruh koinnya satu-satu ya!`, pr, dotsOf(pr, 'a'));
+    header(o.who, `${cap(o.verb)} ${o.label}! Butuh ${numWord(pr)} koin. Seret koinnya satu-satu ke tempat yang bersinar!`, pr, dotsOf(pr, 'a'));
     picks = []; const pr2 = o.ghost.box.geometry.parameters; setHL([{ x: p.x, z: p.z, w: pr2.width, d: pr2.depth, y: .06 }]);
-    choicesEl.innerHTML = ''; const b = document.createElement('button'); b.className = 'choice coinbtn'; b.innerHTML = '<i></i>'; b.setAttribute('aria-label', 'Taruh koin');
-    b.addEventListener('click', () => TK.pay.coin()); choicesEl.appendChild(b);
+    choicesEl.innerHTML = ''; const b = document.createElement('button'); b.className = 'choice coinbtn'; b.innerHTML = '<i></i>'; b.setAttribute('aria-label', 'Seret koin');
+    b.addEventListener('pointerdown', e => TK.pay.drag(e, b)); choicesEl.appendChild(b);
+  },
+  /* coins are spent by dragging them onto the thing being made */
+  drag(e, b) {
+    const t = T; if (!t || t.type !== 'pay' || t.locked || S.coins <= 0) return; e.preventDefault(); ac(); t.idle = 0; hideArrow();
+    const f = document.createElement('div'); f.className = 'dragcoin'; $('app').appendChild(f); b.classList.add('lifted');
+    const p = t.o.pos(), near = ev => { const sc = screenOf(new THREE.Vector3(p.x, .6, p.z)); return Math.hypot(ev.clientX - sc.x, ev.clientY - sc.y) < 110; };
+    const mv = ev => { f.style.left = ev.clientX + 'px'; f.style.top = ev.clientY + 'px'; f.classList.toggle('over', near(ev)); };
+    const up = ev => {
+      window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); b.classList.remove('lifted');
+      const ok = ev.type === 'pointerup' && near(ev) && T === t; f.remove();
+      if (ok) TK.pay.coin(); else if (T === t) nudge('Seret koinnya ke tempat yang bersinar.');
+    };
+    mv(e); window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
   },
   coin() {
     const t = T; if (!t || t.type !== 'pay' || t.locked || S.coins <= 0) return; t.idle = 0;
@@ -256,7 +269,7 @@ TK.pay = {
       } else { startBuild(o); complete(`Terima kasih! Kakek ${o.verb} ${o.label} ya.`, 0); }
     } else save();
   },
-  hint() { return { pos: null, text: 'Tap koinnya.' }; }
+  hint() { const p = T.o.pos(); return { pos: new THREE.Vector3(p.x, 1.8, p.z), text: 'Seret koinnya ke tempat yang bersinar.' }; }
 };
 
 /* 1. PLANT (Kakek): tap n empty holes, counting one by one */
