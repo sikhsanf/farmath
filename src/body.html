@@ -1,0 +1,54 @@
+<div id="app">
+  <canvas id="c"></canvas>
+
+  <div id="hud">
+    <button id="btnPause" class="hbtn" aria-label="Jeda"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg></button>
+    <div id="chips">
+      <div class="chip"><span class="coin"></span><span id="coinN">0</span></div>
+      <div class="chip" id="prog" aria-label="Kemajuan"></div>
+    </div>
+    <button id="btnSnd" class="hbtn" aria-label="Suara"><svg id="icoSnd" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path id="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#6d431b" stroke-width="2" stroke-linecap="round"/></svg></button>
+  </div>
+
+  <div id="bubble" hidden>
+    <div id="avatar"></div>
+    <div id="btext"></div>
+    <button id="btnSay" aria-label="Ulangi suara"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+    <div id="bmeta"><div id="bnum"></div><div id="dots"></div></div>
+  </div>
+
+  <div id="choices"></div>
+
+  <div id="start" class="overlay">
+    <h1 id="title" aria-label="Farmath"><span>F</span><span>a</span><span>r</span><span>m</span><span>a</span><span>t</span><span>h</span></h1>
+    <p id="sub">Kebun hitung-hitungan</p>
+    <button id="btnPlay" aria-label="Main"><i></i></button>
+  </div>
+
+  <div id="menu" class="overlay" hidden>
+    <div class="card">
+      <h2>Jeda</h2>
+      <button id="mResume" class="mbtn go">Lanjut main</button>
+      <button id="mSound" class="mbtn">Suara: nyala</button>
+      <button id="mMusic" class="mbtn">Musik: nyala</button>
+      <button id="mAv" class="mbtn">Ganti karakter</button>
+      <button id="mStory" class="mbtn">Putar cerita</button>
+      <button id="mReset" class="mbtn warn">Mulai dari awal</button>
+    </div>
+  </div>
+
+  <div id="story" hidden><div id="stBox"><div id="stTxt"></div><div id="stDots"></div><div class="stBtns"><button class="mbtn" id="stSkip">Lewati</button><button class="mbtn go" id="stNext">Lanjut</button></div></div></div>
+
+  <div id="cust" hidden>
+    <div id="cuBox">
+      <div class="cuRow" id="cuGender"><button class="opt" data-g="0">👦 Cowok</button><button class="opt" data-g="1">👧 Cewek</button></div>
+      <div class="cuLbl">Topi</div>
+      <div class="cuRow" id="cuHat"></div>
+      <div class="cuLbl">Warna baju</div>
+      <div class="cuRow" id="cuCol"></div>
+      <input id="cuName" maxlength="12" placeholder="Nama kamu" autocomplete="off">
+      <input id="cuFarm" maxlength="16" placeholder="Nama kebun" autocomplete="off">
+      <button class="mbtn go" id="cuGo">Mulai!</button>
+    </div>
+  </div>
+</div>

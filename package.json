@@ -1,0 +1,8 @@
+{
+  "name": "farmath",
+  "version": "0.4.0",
+  "description": "Farmath - farming + math game for young kids (single-file HTML)",
+  "private": true,
+  "scripts": { "build": "python3 build.py" },
+  "dependencies": { "three": "0.128.0" }
+}
