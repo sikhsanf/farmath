@@ -17,14 +17,14 @@ const PRAISE = ['Hebat!', 'Pintar!', 'Mantap!', 'Keren!', 'Bagus sekali!'];
 /* ---------- save state ---------- */
 const KEY = 'farmath_v02';
 const DEF = () => ({
-  done: 0, coins: 0, inv: [0, 0, 0, 0], eggs: 0, snd: true, mus: true, hens: 0, bld: null, av: null, hungryAt: 0, look: null, nm: '', fm: '', story: false, tour: false, tutC: false, tutH: false,
+  done: 0, coins: 0, inv: [0, 0, 0, 0], eggs: 0, snd: true, mus: true, hens: 0, bld: null, av: null, hungryAt: 0, look: null, nm: '', fm: '', story: false, tour: false, tutC: false, tutH: false, tut: 0, vo: true,
   plots: [0, 1, 2, 3].map(() => ({ c: 0, cs: Array(10).fill(0), r: Array(10).fill(0) })),
   unl: { plots: 1, coop: false, kios: false }
 });
 function loadState() {
   try {
     const r = localStorage.getItem(KEY);
-    if (r) { const o = JSON.parse(r); return Object.assign(DEF(), o); }
+    if (r) { const o = JSON.parse(r); if (o.tut === undefined) o.tut = (o.done > 0 || (o.unl && o.unl.plots > 1)) ? 4 : 0; return Object.assign(DEF(), o); }
   } catch (e) { /* storage may be blocked */ }
   return DEF();
 }
@@ -70,14 +70,27 @@ function pickVoice() {
   try { voice = speechSynthesis.getVoices().find(v => /^id/i.test(v.lang)) || null; } catch (e) { voice = null; }
 }
 try { if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; } } catch (e) { /* ignore */ }
+/* Guide voice. Browsers give no SSML, so expression is faked per phrase:
+   "!" is bright and quick, "?" rises, commas lift a little, short words (counting, praise) sparkle. */
 function say(text, who) {
-  if (!S.snd || !window.speechSynthesis) return;
+  if (!S.vo || !window.speechSynthesis) return;
   try {
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'id-ID'; if (voice) u.voice = voice;
-    u.rate = .86; u.pitch = who === 'n' ? 1.3 : .72;
-    speechSynthesis.speak(u);
+    const base = who === 'n' ? 1.22 : .8, parts = String(text).match(/[^.!?,]+[.!?,]*/g) || [String(text)];
+    parts.forEach((raw, i) => {
+      const p = raw.trim(); if (!p) return;
+      const end = p.slice(-1), u = new SpeechSynthesisUtterance(p.replace(/[.!?,]+$/, ''));
+      u.lang = 'id-ID'; if (voice) u.voice = voice;
+      let pitch = base, rate = .86;
+      if (end === '!') { pitch += .2; rate = .95; }
+      else if (end === '?') { pitch += .26; rate = .88; }
+      else if (end === ',') { pitch += .06; rate = .88; }
+      else { pitch -= .04; rate = .82; }
+      if (i === 0 && parts.length > 1) pitch += .05;
+      if (p.length < 12) { pitch += .14; rate += .04; }
+      u.pitch = Math.max(.1, Math.min(2, pitch)); u.rate = rate; u.volume = 1;
+      speechSynthesis.speak(u);
+    });
   } catch (e) { /* ignore */ }
 }
 

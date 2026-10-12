@@ -120,7 +120,7 @@ function tourSteps() {
     { who: 'k', text: `Halo ${S.nm}! Selamat datang di ${S.fm}!`, f: FOC.overview, cheer: ['k', 'n', 'p'] },
     { who: 'k', text: 'Aku Kakek. Aku mengajarimu bertanam: menanam, menyiram, dan memanen sayur.', f: eFocus(ELD.k), hl: ELD.k, cheer: ['k'] },
     { who: 'n', text: 'Aku Nenek. Aku mengurus ayam dan kios. Nanti kita jualan bareng!', f: eFocus(ELD.n), hl: ELD.n, cheer: ['n'] },
-    { who: 'k', text: 'Di kebun ini kamu belajar berhitung sambil bertani. Ayo mulai! Tap tanahnya.', f: FOC.plot(0), cells: true }
+    { who: 'k', text: 'Ada 4 misi kecil untuk belajar bertani sambil berhitung. Ayo mulai! Tap tanahnya.', f: FOC.plot(0), cells: true }
   ];
 }
 function tourShow() {

@@ -37,7 +37,8 @@ function updateHud() {
   if (S.eggs) inv.push('🥚' + S.eggs);
   $('prog').textContent = inv.length ? inv.join(' ') : '🧺 0';
   $('wave').style.display = S.snd ? '' : 'none';
-  $('mSound').textContent = 'Suara: ' + (S.snd ? 'nyala' : 'mati');
+  $('mSound').textContent = 'Efek suara: ' + (S.snd ? 'nyala' : 'mati');
+  $('mVoice').textContent = 'Suara pemandu: ' + (S.vo ? 'nyala' : 'mati');
   $('mMusic').textContent = 'Musik: ' + (S.mus ? 'nyala' : 'mati');
 }
 function addCoins(n) {
@@ -109,7 +110,7 @@ const plGo = (x, z) => elderGo(PL, x, z);
 
 /* ---------- game rules ---------- */
 const FAST = /[?&]fast/.test(location.search);
-const GROW_MS = FAST ? 4000 : 90000, BUILD_MS = FAST ? 3000 : 10000, HUNGRY_MS = FAST ? 8000 : 100000;
+const GROW_MS = FAST ? 4000 : 40000, BUILD_MS = FAST ? 3000 : 10000, HUNGRY_MS = FAST ? 8000 : 100000;
 const cellsIn = (k, st) => S.plots[k].cs.map((v, i) => v === st ? i : -1).filter(i => i >= 0);
 const cnt = (k, st) => cellsIn(k, st).length;
 const plotFull = k => cnt(k, 0) === 0;
@@ -227,6 +228,7 @@ function endTask() {
   const t = T; if (TK[t.type].cleanup) TK[t.type].cleanup();
   hideChoices(); hideBubble(); T = null; if (t.type !== 'pay') S.done++; save(); updateHud(); refreshOffers();
   focus(FOC.overview); plGo(HUB.x, HUB.z);
+  if (t.type === 'plant' && S.tut === 0) advTut(1); else if (t.type === 'water' && S.tut === 1) advTut(2); else if (t.type === 'harvest' && S.tut === 3) advTut(4);
 }
 const kakekBusy = () => { if (!S.bld) return false; tip('k', `Kakek lagi bikin ${ofrById(S.bld.id).label}. Tunggu ya.`); return true; };
 
@@ -299,7 +301,7 @@ TK.water = {
     if (T.got.has(d.i) || T.busy) return;
     const sp = S.plots[T.plot], p = P[T.plot], cell = p.cells[d.i];
     T.got.add(d.i); T.k++; T.busy = 1; markDot(T.k - 1); SFX.pop(T.k); say(NUM[T.k], 'k'); popNum(new THREE.Vector3(cell.x, 1.3, cell.z), String(T.k));
-    sp.cs[d.i] = 2; sp.r[d.i] = Date.now() + GROW_MS; save(); hlWater();
+    sp.cs[d.i] = 2; sp.r[d.i] = Date.now() + GROW_MS; cell.boost = 0; save(); hlWater();
     const to = new THREE.Vector3(cell.x + .72, 1.15, cell.z);
     flyTo(CAN, to, .35, .25, () => {
       SFX.water();
@@ -485,11 +487,20 @@ function tapPlot(k, pt) {
   if (T) return;
   const sp = S.plots[k], p = P[k], mx = maxN();
   const col = clamp(Math.floor(pt.x - 2), 0, 4), row = clamp(Math.floor(pt.z - p.zs), 0, 1), st = sp.cs[row * 5 + col];
-  if (st === 2) { tip('k', 'Sayurnya masih tumbuh. Tunggu ya!'); return; }
+  if (st === 2) { cheerCell(k, row * 5 + col); return; }
   if (kakekBusy()) return;
   if (st === 0) startTask({ type: 'plant', plot: k, n: rand(1, Math.min(mx, cnt(k, 0))) });
   else if (st === 1) startTask({ type: 'water', plot: k, n: Math.min(cnt(k, 1), mx) });
   else if (st === 3) startTask({ type: 'harvest', plot: k, n: Math.min(cnt(k, 3), mx, 10) });
+}
+/* waiting is play: tapping a growing plant cheers it on and helps it grow a bit */
+function cheerCell(k, i) {
+  const c = P[k].cells[i], sp = S.plots[k]; if (!c || !c.parts || !c.parts.sprout) return;
+  wiggle(c.parts.sprout); SFX.pop(rand(1, 5)); SFX.soft();
+  burst(new THREE.Vector3(c.x, .9, c.z), [0xff8fb1, 0xffc2d6, 0x9be37f], 7, 2, .1, .8, 3);
+  popNum(new THREE.Vector3(c.x, 1.2, c.z), '💚');
+  c.boost = c.boost || 0; if (c.boost < 3) { c.boost++; sp.r[i] -= GROW_MS * .1; save(); }
+  else if (!(c.boost++ % 3)) say('Semangat!', 'k');
 }
 function offerTap(o) {
   if (T) return;
@@ -509,19 +520,42 @@ function hubAlerts() {
   if (waiting && lastCust !== CUST) { lastCust = CUST; if (!S.tutC) { S.tutC = true; save(); focus(FOC.kios); notifO = true; tip('n', 'Ada pelanggan! Tap pelanggannya ya.', 4.5); setHL([padOf(CUST.g, 1.2, 1.2, .04)]); return; } }
   if (hg && lastHg !== S.hungryAt) { lastHg = S.hungryAt; if (!S.tutH) { S.tutH = true; save(); focus(FOC.coop); notifO = true; tip('n', 'Ayam lapar! Tap karung jagungnya ya.', 4.5); setHL([padOf(SACK, 1, 1, .04)]); return; } }
   const l = [];
+  if (S.tut < 4) { const st = [0, 1, 2, 3][S.tut], c = cellsIn(0, [0, 1, 2, 3][st]); c.forEach(i => l.push(cellPad(0, i))); }
   if (hg) l.push(padOf(SACK, 1, 1, .04));
   if (waiting) l.push(padOf(CUST.g, 1.2, 1.2, .04));
   setHL(l);
 }
-let introT = 0, introDone = false;
+let introDone = false, tutIdle = 0;
+/* ---------- tutorial: 4 small missions, then it is clearly over ---------- */
+const TUT = [
+  { ic: '🌱', t: 'Misi 1: Tanam bibit. Tap tanah yang bersinar.' },
+  { ic: '💧', t: 'Misi 2: Siram bibitnya. Tap yang bersinar.' },
+  { ic: '⏳', t: 'Misi 3: Tunggu tumbuh. Tap tanamannya biar semangat!' },
+  { ic: '🧺', t: 'Misi 4: Panen! Tap sayur yang bersinar.' }
+];
+const TUT_TIP = ['Ayo tanam bibit! Tap tanah yang bersinar.', 'Siram bibitnya ya! Tap yang bersinar.', 'Tap tanamannya biar semangat dan cepat tumbuh. Atau jalan-jalan pakai joystick!', 'Sayurnya sudah matang! Tap yang bersinar untuk panen.'];
+let mKey = '';
+function tutSync() {
+  const show = started && !touring && S.tut < 4, key = show ? 'm' + S.tut : '';
+  if (key === mKey) return; mKey = key;
+  const el = $('mission'); el.hidden = !show; if (!show) return;
+  el.innerHTML = '<div class="msteps">' + TUT.map((s, i) => (i ? '<span class="msl"></span>' : '') + '<span class="ms ' + (i < S.tut ? 'ok' : i === S.tut ? 'on' : '') + '">' + (i < S.tut ? '✓' : s.ic) + '</span>').join('') + '</div><div class="mtxt">' + TUT[S.tut].t + '</div>';
+}
+function advTut(n) {
+  S.tut = n; save(); tutIdle = 0; SFX.good();
+  if (n >= 4) { after(.7, showTutEnd); return; }
+  tip('k', ['', 'Bagus! Sekarang siram bibitnya.', 'Bagus! Sekarang tunggu tumbuh. Tap tanamannya biar semangat!', 'Sayurnya matang! Sekarang panen.'][n], 3.5);
+}
+function showTutEnd() {
+  paused = true; stopSpeech(); $('tutend').hidden = false; SFX.good(); say('Hebat! Tutorial selesai! Sekarang kamu bisa bertani sendiri.', 'k');
+  [ELD.k, ELD.n, PL].forEach(e => { e.cheer = 3; }); burst(new THREE.Vector3(8, 2, 8), CONF, 40, 6, .18, 1.5);
+}
+$('tutOk').addEventListener('click', () => { $('tutend').hidden = true; paused = false; stopSpeech(); focus(FOC.overview); });
 function stepHub(dt) {
   if (T || touring) return;
   if (tipT > 0) { tipT -= dt; if (tipT <= 0) tipEnd(); }
   else { checkNotif(); hubAlerts(); }
-  if (!introDone && S.done === 0 && S.plots[0].cs.every(v => v === 0)) {
-    introT += dt;
-    if (introT > 5) { introDone = true; tip('k', 'Ayo bertani! Tap tanah di kebun.', 4.5); setHL(cellsIn(0, 0).map(i => cellPad(0, i))); }
-  }
+  if (S.tut < 4 && started) { tutIdle += dt; if (tutIdle > 10) { tutIdle = 0; tip('k', TUT_TIP[S.tut], 4); } }
   if (S.unl.kios && !CUST) { custT -= dt; if (custT <= 0) { custT = 3; spawnCust(); } }
 }
 
@@ -529,6 +563,7 @@ function stepHub(dt) {
 function makeMark(kind) {
   const g = new THREE.Group();
   if (kind === 'drop') { V(g, 0x3aa0ff, .22, .3, .22, 0, 0, 0, false); V(g, 0x9fd8ff, .12, .12, .12, 0, .3, 0, false); }
+  else if (kind === 'plus') { V(g, 0x58c45f, .42, .1, .13, 0, 0, 0, false); V(g, 0x58c45f, .13, .1, .42, 0, 0, 0, false); V(g, 0xbdf2a8, .13, .12, .13, 0, .1, 0, false); }
   else { V(g, 0xffd23f, .32, .32, .32, 0, 0, 0, false); V(g, 0xfff3a6, .16, .16, .16, 0, .32, 0, false); }
   g.visible = false; scene.add(g); return g;
 }
@@ -552,15 +587,16 @@ function stepPlots(dt) {
         }
       }
       if (st === 3 && sp_ && Math.random() < .4) sparkle(c);
-      const kind = st === 1 ? 'drop' : st === 3 ? 'star' : null;
+      const kind = st === 1 ? 'drop' : st === 3 ? 'star' : st === 0 && !T && started && !touring ? 'plus' : null;
       if (kind || c.mk) {
         c.mk = c.mk || {};
-        ['drop', 'star'].forEach(kd => { const m = c.mk[kd]; if (m) m.visible = kd === kind; });
-        if (kind) { const m = c.mk[kind] || (c.mk[kind] = makeMark(kind)); m.visible = true; m.position.set(c.x, 1.0 + Math.sin(tm * 4 + i) * .1, c.z); m.rotation.y = tm * 2; }
+        ['drop', 'star', 'plus'].forEach(kd => { const m = c.mk[kd]; if (m) m.visible = kd === kind; });
+        if (kind) { const m = c.mk[kind] || (c.mk[kind] = makeMark(kind)); m.visible = true; m.position.set(c.x, (kind === 'plus' ? .5 : 1.0) + Math.sin(tm * 4 + i) * .1, c.z); m.rotation.y = tm * 2; }
       }
     }
   }
   if (readyNow) { SFX.soft(); save(); }
+  if (S.tut === 2 && cellsIn(0, 3).length) advTut(3);
 }
 
 /* ---------- idle hints + ambient taps ---------- */
@@ -666,19 +702,50 @@ canvas.addEventListener('pointerdown', e => {
   if (!T.locked) { T.idle = 0; hideArrow(); TK[T.type].tap(d); }
 });
 
+/* ---------- virtual joystick: walk around the farm ---------- */
+const joy = $('joy'), joyK = joy.firstElementChild; let joyId = null, jx = 0, jy = 0;
+function joyAt(e) {
+  const r = joy.getBoundingClientRect(), R = r.width / 2 - 10; let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2); const d = Math.hypot(dx, dy);
+  if (d > R) { dx *= R / d; dy *= R / d; } jx = dx / R; jy = dy / R; joyK.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+}
+function joyEnd() { joyId = null; jx = jy = 0; joyK.style.transform = ''; }
+joy.addEventListener('pointerdown', e => { e.preventDefault(); ac(); joyId = e.pointerId; try { joy.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } joyAt(e); tutIdle = 0; });
+joy.addEventListener('pointermove', e => { if (e.pointerId === joyId) joyAt(e); });
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => joy.addEventListener(n, e => { if (e.pointerId === joyId) joyEnd(); }));
+const _f = new THREE.Vector3();
+const blockers = () => { const b = []; if (S.unl.coop) b.push({ x: 12, z: 3, hw: 2.2, hd: 2.2 }); if (S.unl.kios) b.push({ x: 12, z: 9.4, hw: 2.3, hd: 1.0 }); return b; };
+function stepJoy(dt) {
+  const ok = started && !paused && !touring && !T && !stOn;
+  if (joy.hidden === ok) { joy.hidden = !ok; if (!ok) joyEnd(); }
+  if (!ok) return;
+  const mag = Math.min(1, Math.hypot(jx, jy));
+  if (mag < .18) { if (PL.joy) { PL.joy = false; PL.tx = null; } return; }
+  camera.getWorldDirection(_f); const n = Math.hypot(_f.x, _f.z) || 1, fx = _f.x / n, fz = _f.z / n;
+  const mx = -fz * jx + fx * -jy, mz = fx * jx + fz * -jy, m = Math.hypot(mx, mz) || 1;
+  PL.joy = true; PL.cb = null; PL.tx = PL.g.position.x + mx / m * .6; PL.tz = PL.g.position.z + mz / m * .6;
+}
+function fencePL() {
+  const p = PL.g.position; p.x = clamp(p.x, .8, 16); p.z = clamp(p.z, .8, 16.2);
+  blockers().forEach(b => {
+    const dx = p.x - b.x, dz = p.z - b.z, ox = b.hw + .35 - Math.abs(dx), oz = b.hd + .35 - Math.abs(dz);
+    if (ox > 0 && oz > 0) { if (ox < oz) p.x += Math.sign(dx || 1) * ox; else p.z += Math.sign(dz || 1) * oz; }
+  });
+}
+
 /* ---------- menu, sound, start ---------- */
 const stopSpeech = () => { try { speechSynthesis.cancel(); } catch (e) { /* ignore */ } };
 function setPaused(p) { paused = p; $('menu').hidden = !p; if (p) stopSpeech(); }
 $('btnPause').addEventListener('click', () => setPaused(true));
 $('mResume').addEventListener('click', () => setPaused(false));
-$('btnSnd').addEventListener('click', () => { S.snd = !S.snd; if (!S.snd) stopSpeech(); save(); updateHud(); });
-$('mSound').addEventListener('click', () => { S.snd = !S.snd; if (!S.snd) stopSpeech(); save(); updateHud(); });
+$('btnSnd').addEventListener('click', () => { S.snd = !S.snd; save(); updateHud(); });
+$('mSound').addEventListener('click', () => { S.snd = !S.snd; save(); updateHud(); });
+$('mVoice').addEventListener('click', () => { S.vo = !S.vo; if (!S.vo) stopSpeech(); save(); updateHud(); if (S.vo) say('Halo! Aku Kakek.', 'k'); });
 $('mMusic').addEventListener('click', () => { S.mus = !S.mus; save(); updateHud(); });
 let resetArmed = false;
 $('mReset').addEventListener('click', () => {
-  if (!resetArmed) { resetArmed = true; $('mReset').textContent = 'Yakin? Ketuk lagi'; setTimeout(() => { resetArmed = false; $('mReset').textContent = 'Mulai dari awal'; }, 3000); return; }
+  if (!resetArmed) { resetArmed = true; $('mReset').textContent = 'Yakin? Ketuk lagi'; setTimeout(() => { resetArmed = false; $('mReset').textContent = 'Hapus karakter'; }, 3000); return; }
   try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
-  S = DEF(); save(); location.reload();
+  S = Object.assign(DEF(), { snd: S.snd, mus: S.mus, vo: S.vo, story: true }); save(); location.reload();
 });
 $('btnSay').addEventListener('click', () => { if (T) say(T.text, T.who); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { stopSpeech(); try { if (AC) AC.suspend(); } catch (e) { /* ignore */ } } else ac(); });
@@ -690,7 +757,7 @@ function frame(now) {
   let dt = Math.min(.05, (now - last) / 1000); last = now; if (paused) dt = 0;
   tm += dt;
   if (stOn) { stTick(dt); renderer.render(stScene, stCam); return; }
-  stepAnims(dt); stepPT(dt); stepWalkers(dt); stepElder(ELD.k, dt, tm); stepElder(ELD.n, dt, tm); stepElder(PL, dt, tm);
+  stepAnims(dt); stepPT(dt); stepWalkers(dt); stepElder(ELD.k, dt, tm); stepElder(ELD.n, dt, tm); stepJoy(dt); stepElder(PL, dt, tm); if (PL.joy) fencePL();
   if (S.unl.coop) HENS.forEach(h => { if (h.g.visible) stepHen(h, dt, tm); });
   CLOUDS.forEach(c => { c.g.position.x = c.x0 + Math.sin(tm * .1 + c.ph) * 1.2; });
   const k = 1 - Math.exp(-dt * 4.2);
@@ -705,7 +772,7 @@ function frame(now) {
     if (S.bld && Date.now() >= S.bld.at) finishBuild();
     stepBuild(dt);
     if (S.hens > 0 && S.snd) { cluckT -= dt; if (cluckT <= 0) { cluckT = 3 + Math.random() * 6; SFX.cluck(); const h = HENS[rand(0, S.hens - 1)]; hop(h.g, .15, .25); } }
-    stepHub(dt);
+    stepHub(dt); tutSync();
   }
   updateChips();
   renderer.render(scene, camera);
