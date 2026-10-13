@@ -7,7 +7,7 @@ with sync_playwright() as p:
     ctx = b.new_context(viewport={'width': 390, 'height': 844}); ctx.add_init_script("localStorage.removeItem('farmath_v02')")
     pg = ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e))); pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' and 'ERR_TUNNEL' not in m.text else None)
-    pg.goto(URL); pg.wait_for_timeout(800); pg.screenshot(path='shots/i_title.png')
+    pg.goto(URL+'?skip'); pg.wait_for_timeout(800); pg.screenshot(path='shots/i_title.png')
     pg.click('#btnPlay'); pg.wait_for_timeout(1500); pg.screenshot(path='shots/i_story1.png')
     for i in range(3): pg.click('#stNext'); pg.wait_for_timeout(1200); pg.screenshot(path='shots/i_story%d.png' % (i+2))
     pg.click('#stNext'); pg.wait_for_timeout(1500)

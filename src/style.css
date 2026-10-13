@@ -161,3 +161,27 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
 .coinbtn.lifted{opacity:.45}
 .dragcoin{position:fixed;z-index:9;width:76px;height:76px;border-radius:50%;background:var(--sun);border:6px solid var(--sun-d);box-shadow:inset -6px -6px 0 rgba(255,255,255,.35),0 10px 14px rgba(0,0,0,.25);pointer-events:none;transform:translate(-50%,-50%) scale(1);transition:transform .1s}
 .dragcoin.over{transform:translate(-50%,-50%) scale(1.25)}
+
+/* "presented by" splash + opening animation */
+#splash{position:absolute;inset:0;z-index:30;background:#fff;display:grid;place-items:center;transition:opacity 1s ease}
+#splash.gone{opacity:0;pointer-events:none}
+#spBox{text-align:center;opacity:0;transform:translateY(8px);transition:opacity .9s ease,transform .9s ease}
+#splash.in #spBox{opacity:1;transform:none}
+#splash.out #spBox{opacity:0;transform:none}
+#spBox small{display:block;font-size:20px;font-weight:700;letter-spacing:.16em;color:#a39482;margin-bottom:4px}
+#spBox b{display:block;font-size:clamp(46px,14vw,70px);font-weight:800;color:var(--wood-dd);letter-spacing:-.5px;line-height:1}
+#spBox b span{color:var(--leaf)}
+#start.op{background:none;justify-content:flex-start;gap:10px;padding-top:calc(env(safe-area-inset-top,0px) + 8vh)}
+#start.op #btnPlay{margin-top:auto;margin-bottom:calc(env(safe-area-inset-bottom,0px) + 5vh)}
+#start.op #title span{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards}
+#start.op #sub{animation:tfade .8s ease backwards 3.7s}
+#start.op #btnPlay{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards 4.4s}
+#start.op #title span:nth-child(1){animation-delay:2.5s}
+#start.op #title span:nth-child(2){animation-delay:2.6s}
+#start.op #title span:nth-child(3){animation-delay:2.7s}
+#start.op #title span:nth-child(4){animation-delay:2.8s}
+#start.op #title span:nth-child(5){animation-delay:2.9s}
+#start.op #title span:nth-child(6){animation-delay:3.0s}
+#start.op #title span:nth-child(7){animation-delay:3.1s}
+@keyframes tpop{0%{opacity:0;transform:scale(.3) translateY(24px);visibility:hidden}1%{visibility:visible}100%{opacity:1;transform:none;visibility:visible}}
+@keyframes tfade{0%{opacity:0;visibility:hidden}1%{visibility:visible}100%{opacity:1;visibility:visible}}

@@ -41,6 +41,46 @@ const ST_SCENES = [
     const coins = [0, 1, 2].map(i => { const c = new THREE.Group(); g.add(c); V(c, 0xffd34d, .7, .7, .14, 0, 0, 0, false); V(c, 0xffe58a, .4, .4, .16, 0, .15, 0, false); c.position.set(-1.8 + i * 1.8, 3.4, -.6); return c; });
     return (dt, t) => { k.cheer = 1; n.cheer = 1; stepElder(k, dt, t); stepElder(n, dt, t); coins.forEach((c, i) => { c.rotation.y = t * 2.5 + i; c.position.y = 3.4 + Math.sin(t * 2 + i) * .3; }); }; }
 ];
+/* opening animation: seeds pop up into a field while Kakek waters, then the title comes in */
+ST_SCENES.push(g => {
+  stPlat(g, 14, 9); stTree(g, -5.6, -2.8); stTree(g, 5.8, -3, .9); stFlowers(g, 18, 12, 6); const cl = stClouds(g), sun = stSun(g);
+  V(g, 0x8a5a33, 7.4, .28, 3.2, 0, 0, -.6, false);
+  const crops = []; for (let i = 0; i < 10; i++) { const c = cropParts(i % 4).grown; c.position.set(-2.6 + (i % 5) * 1.3, .28, -1.2 + Math.floor(i / 5) * 1.3); c.scale.setScalar(.001); g.add(c); crops.push(c); }
+  const k = stFace(makeElder('k')); k.g.position.set(-3.8, 0, 1.6); k.g.scale.setScalar(1.5); g.add(k.g);
+  const n = stFace(makeElder('n')); n.g.position.set(3.8, 0, 1.6); n.g.scale.setScalar(1.5); g.add(n.g);
+  const can = makeWateringCan(); can.scale.setScalar(1.5); can.position.set(-2.6, 1.5, 1); g.add(can);
+  const back = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+  return (dt, t) => {
+    k.wave = 1; n.cheer = t > 3 ? 1 : 0; stepElder(k, dt, t); stepElder(n, dt, t); cl.forEach((q, i) => q.position.x = ((t * .3 + i * 5.3) % 18) - 9); sun.rotation.y = t;
+    crops.forEach((c, i) => { const x = Math.max(0, Math.min(1, (t - .4 - i * .22) / .9)); c.scale.setScalar(Math.max(.001, 1.5 * back(x))); });
+    const sw = Math.min(1, t / 2.6); can.position.x = -2.6 + sw * 5.2 + Math.sin(t * 2) * .1; can.position.z = .9 + Math.sin(t * 3) * .1; can.rotation.z = -.55 + Math.sin(t * 6) * .08;
+  };
+});
+let opOn = false, opTimers = [];
+/* browsers keep audio locked until the first touch, so cues only play once it is running (never a burst of late sounds) */
+const cue = fn => { if (AC && AC.state === 'running') fn(); };
+['pointerdown', 'touchend', 'keydown'].forEach(ev => addEventListener(ev, () => ac(), { once: true, passive: true }));
+function openOpening() {
+  opOn = true; stOn = true; sceneUi(true); if (stRoot) stScene.remove(stRoot);
+  stRoot = new THREE.Group(); stScene.add(stRoot); stScene.background = new THREE.Color('#bfe8ff'); stT = 0; stUpd = ST_SCENES[4](stRoot);
+  stLook = [0, 1.1, 0]; stW = 15; stHh = 9; stOff = -.12; $('start').classList.add('op'); $('start').hidden = false;
+  startMusic(); cue(SFX.whoosh);
+  const at = (s, f) => opTimers.push(setTimeout(() => cue(f), s * 1000));
+  for (let i = 0; i < 10; i++) at(.7 + i * .22, () => SFX.pop(i % 5));
+  for (let i = 0; i < 7; i++) at(2.5 + i * .1, () => SFX.pop(i));
+  at(3.7, SFX.soft); at(4.4, SFX.good);
+}
+function closeOpening() {
+  if (!opOn) return; opOn = false; opTimers.forEach(clearTimeout); opTimers = []; stOn = false; sceneUi(false); if (stRoot) { stScene.remove(stRoot); stRoot = null; } $('start').classList.remove('op');
+}
+/* "presented by" splash: white -> logo fades in -> logo fades out to white -> white lifts to reveal the opening */
+let spTimers = [];
+function runSplash() {
+  const sp = $('splash'); let went = false;
+  const go = () => { if (went) return; went = true; spTimers.forEach(clearTimeout); sp.classList.add('out'); openOpening(); sp.classList.add('gone'); setTimeout(() => sp.remove(), 1200); };
+  spTimers = [setTimeout(() => { sp.classList.add('in'); cue(SFX.soft); }, 200), setTimeout(() => sp.classList.add('out'), 2500), setTimeout(go, 3500)];
+  sp.addEventListener('click', go);
+}
 function stSet(i) {
   if (stRoot) stScene.remove(stRoot);
   stRoot = new THREE.Group(); stScene.add(stRoot); stT = 0; stScene.background = new THREE.Color(ST_BG[i % ST_BG.length]);
@@ -143,7 +183,7 @@ function startGame() {
   if (!S.tour) startTour();
 }
 function afterTitle() {
-  ac(); $('start').hidden = true;
+  ac(); closeOpening(); $('start').hidden = true;
   if (S.look) { startGame(); return; }
   const go = () => openCustom(() => startGame());
   if (!S.story) openStory(go); else go();

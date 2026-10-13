@@ -6,6 +6,7 @@ syncHens(); buildPlayer(); refreshOffers();
 if (S.bld) { startConVis(ofrById(S.bld.id)); const q = conPoints()[0]; ELD.k.g.position.set(q.x, 0, q.z); }
 resize(); focus(FOC.overview, true); applyCam(); updateHud();
 requestAnimationFrame(frame);
+if (FAST || /[?&](auto|skip)/.test(location.search)) { $('splash').remove(); $('start').hidden = false; } else runSplash();
 if (/[?&]auto/.test(location.search)) { if (!S.look) S.look = { g: false, h: 2, c: 0 }; S.nm = S.nm || 'Petani Cilik'; S.fm = S.fm || 'Kebun Ceria'; S.tour = true; buildPlayer(); startGame(); }
 
 /* test hook (harmless in production) */

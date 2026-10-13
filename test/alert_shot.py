@@ -9,7 +9,7 @@ with sync_playwright() as p:
     b = p.chromium.launch(args=['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
     ctx = b.new_context(viewport={'width': 390, 'height': 844}); ctx.add_init_script("localStorage.setItem('farmath_v02', %s)" % json.dumps(json.dumps(S0)))
     pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-    pg.goto(URL); pg.wait_for_timeout(800); pg.click('#btnPlay')
+    pg.goto(URL+'?skip'); pg.wait_for_timeout(800); pg.click('#btnPlay')
     pg.wait_for_timeout(2500); pg.screenshot(path='shots/alert_hungry.png')
     pg.wait_for_timeout(9000); pg.screenshot(path='shots/alert_cust.png')
     pg.wait_for_timeout(5000); pg.screenshot(path='shots/alert_hub.png'); print(errs)

@@ -688,7 +688,7 @@ function pluck(f, t, d, v, type) {
   } catch (e) { /* ignore */ }
 }
 function musTick() {
-  const a = AC; if (!a || !S.mus || paused || document.hidden) { musT = 0; return; }
+  const a = AC; if (!a || a.state !== 'running' || !S.mus || paused || document.hidden) { musT = 0; return; }
   if (!musBus) { musBus = a.createGain(); musBus.gain.value = .55; musBus.connect(a.destination); }
   if (musT < a.currentTime) musT = a.currentTime + .08;
   while (musT < a.currentTime + .35) {
