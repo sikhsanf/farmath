@@ -63,7 +63,8 @@ const SFX = {
   coin: () => { tone(988, .08, 'square', .06); tone(1319, .2, 'square', .06, 1, .07); },
   water: () => tone(900, .16, 'sine', .08, .5),
   hello: () => { tone(660, .1, 'triangle', .12); tone(880, .16, 'triangle', .12, 1, .1); },
-  whoosh: () => tone(300, .18, 'sine', .08, 1.8)
+  whoosh: () => tone(300, .18, 'sine', .08, 1.8),
+  rooster: () => { tone(520, .14, 'sawtooth', .07, 1.1); tone(700, .12, 'sawtooth', .07, 1, .17); tone(660, .1, 'sawtooth', .06, 1, .32); tone(900, .5, 'sawtooth', .07, .55, .44); }
 };
 let voice = null;
 function pickVoice() {

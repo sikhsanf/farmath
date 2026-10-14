@@ -179,15 +179,15 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
 #start.op{background:none;justify-content:flex-start;gap:10px;padding-top:calc(env(safe-area-inset-top,0px) + 8vh)}
 #start.op #btnPlay{margin-top:auto;margin-bottom:calc(env(safe-area-inset-bottom,0px) + 5vh)}
 #start.op #title span{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards}
-#start.op #sub{animation:tfade .8s ease backwards 3.7s}
-#start.op #btnPlay{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards 4.4s}
-#start.op #title span:nth-child(1){animation-delay:2.5s}
-#start.op #title span:nth-child(2){animation-delay:2.6s}
-#start.op #title span:nth-child(3){animation-delay:2.7s}
-#start.op #title span:nth-child(4){animation-delay:2.8s}
-#start.op #title span:nth-child(5){animation-delay:2.9s}
-#start.op #title span:nth-child(6){animation-delay:3.0s}
-#start.op #title span:nth-child(7){animation-delay:3.1s}
+#start.op #sub{animation:tfade .8s ease backwards 4s}
+#start.op #btnPlay{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards 4.6s}
+#start.op #title span:nth-child(1){animation-delay:2.8s}
+#start.op #title span:nth-child(2){animation-delay:2.9s}
+#start.op #title span:nth-child(3){animation-delay:3.0s}
+#start.op #title span:nth-child(4){animation-delay:3.1s}
+#start.op #title span:nth-child(5){animation-delay:3.2s}
+#start.op #title span:nth-child(6){animation-delay:3.3s}
+#start.op #title span:nth-child(7){animation-delay:3.4s}
 @keyframes tpop{0%{opacity:0;transform:scale(.3) translateY(24px);visibility:hidden}1%{visibility:visible}100%{opacity:1;transform:none;visibility:visible}}
 @keyframes tfade{0%{opacity:0;visibility:hidden}1%{visibility:visible}100%{opacity:1;visibility:visible}}
 
@@ -215,6 +215,10 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
 #bubble.tip{pointer-events:auto}
 #bubble.tip #bnext{display:block}
 .cuHint{font-size:14px;font-weight:700;color:#8b7a63;text-align:center;margin-top:-6px}
+#start.op.ready #title span{animation:tfloat 2.2s ease-in-out infinite;animation-delay:calc(var(--i) * -.28s)}
+#start.op.ready #btnPlay{animation:bpulse 1.3s ease-in-out infinite}
+@keyframes tfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-9px) rotate(-1.5deg)}}
+@keyframes bpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
 
 </style>
 <div id="app">
@@ -370,7 +374,8 @@ const SFX = {
   coin: () => { tone(988, .08, 'square', .06); tone(1319, .2, 'square', .06, 1, .07); },
   water: () => tone(900, .16, 'sine', .08, .5),
   hello: () => { tone(660, .1, 'triangle', .12); tone(880, .16, 'triangle', .12, 1, .1); },
-  whoosh: () => tone(300, .18, 'sine', .08, 1.8)
+  whoosh: () => tone(300, .18, 'sine', .08, 1.8),
+  rooster: () => { tone(520, .14, 'sawtooth', .07, 1.1); tone(700, .12, 'sawtooth', .07, 1, .17); tone(660, .1, 'sawtooth', .06, 1, .32); tone(900, .5, 'sawtooth', .07, .55, .44); }
 };
 let voice = null;
 function pickVoice() {
@@ -1858,7 +1863,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 const stScene = new THREE.Scene(), stCam = new THREE.PerspectiveCamera(40, 1, .5, 200);
 stScene.add(new THREE.HemisphereLight(0xffffff, 0xb8d89a, .95));
 { const d = new THREE.DirectionalLight(0xfff0d2, .8); d.position.set(-5, 10, 8); stScene.add(d); }
-let stRoot = null, stUpd = null, stT = 0, stOn = false, stBack = null, stLook = [0, 1.2, 0], stW = 15, stHh = 9, stOff = .12;
+let stCamFn = null, stRoot = null, stUpd = null, stT = 0, stOn = false, stBack = null, stLook = [0, 1.2, 0], stW = 15, stHh = 9, stOff = .12;
 const ST_BG = ['#bfe8ff', '#d6f0b8', '#ffe8c4', '#fff0b8'];
 
 function stPlat(g, w, d) { V(g, 0x7ccf5b, w, .5, d, 0, -.5, 0, false); V(g, 0x9b6b43, w, .9, d, 0, -1.4, 0, false); V(g, 0x7d5636, w - .8, .8, d - .8, 0, -2.2, 0, false); }
@@ -1898,17 +1903,52 @@ const ST_SCENES = [
 ];
 /* opening animation: seeds pop up into a field while Kakek waters, then the title comes in */
 ST_SCENES.push(g => {
-  stPlat(g, 14, 9); stTree(g, -5.6, -2.8); stTree(g, 5.8, -3, .9); stFlowers(g, 18, 12, 6); const cl = stClouds(g), sun = stSun(g);
+  const ease = x => x * x * (3 - 2 * x), cl01 = x => Math.max(0, Math.min(1, x));
+  stPlat(g, 14, 9); stTree(g, -5.8, -2.6); stFlowers(g, 22, 12, 6);
+  /* back hills + windmill give depth */
+  [[-3.2, 3.4, 1.1, 0x86cf62], [1.2, 4.6, 1.5, 0x79c457], [-6, 2.6, .9, 0x8fd46a]].forEach(h => V(g, h[3], h[1], h[2], 2.2, h[0], 0, -3.9, false));
+  const mill = new THREE.Group(); mill.position.set(4.9, 0, -3.5); g.add(mill);
+  V(mill, 0xf2e6d0, 1.3, 2.1, 1.3, 0, 0, 0, false); V(mill, 0xc44536, 1.6, .6, 1.6, 0, 2.1, 0, false); V(mill, 0x8a5a33, .5, .9, .06, 0, 0, .66, false);
+  const bl = new THREE.Group(); bl.position.set(0, 1.9, .85); mill.add(bl); V(bl, 0xf6efe0, .2, 2.7, .06, 0, -1.35, 0, false); V(bl, 0xf6efe0, 2.7, .2, .06, 0, -.1, 0, false); V(bl, 0xd9c7a0, .3, .3, .1, 0, -.15, 0, false);
+  const cl = stClouds(g), sun = stSun(g);
   V(g, 0x8a5a33, 7.4, .28, 3.2, 0, 0, -.6, false);
-  const crops = []; for (let i = 0; i < 10; i++) { const c = cropParts(i % 4).grown; c.position.set(-2.6 + (i % 5) * 1.3, .28, -1.2 + Math.floor(i / 5) * 1.3); c.scale.setScalar(.001); g.add(c); crops.push(c); }
-  const k = stFace(makeElder('k')); k.g.position.set(-3.8, 0, 1.6); k.g.scale.setScalar(1.5); g.add(k.g);
-  const n = stFace(makeElder('n')); n.g.position.set(3.8, 0, 1.6); n.g.scale.setScalar(1.5); g.add(n.g);
-  const can = makeWateringCan(); can.scale.setScalar(1.5); can.position.set(-2.6, 1.5, 1); g.add(can);
-  const back = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+  const crops = [], seeds = [];
+  for (let i = 0; i < 10; i++) {
+    const x = -2.6 + (i % 5) * 1.3, z = -1.2 + Math.floor(i / 5) * 1.3;
+    const c = cropParts(i % 4).grown; c.position.set(x, .28, z); c.scale.setScalar(.001); g.add(c); crops.push(c);
+    const sd = new THREE.Group(); sd.position.set(x, .28, z); g.add(sd); V(sd, 0x4a2f18, .22, .12, .22, 0, 0, 0, false); sd.visible = false; seeds.push(sd);
+  }
+  /* sparkles (own tiny particle system for this scene) */
+  const sg = new THREE.BoxGeometry(.13, .13, .13), sp = [];
+  const spark = (x, y, z, cols, n, up) => { for (let i = 0; i < n; i++) { const m = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: cols[i % cols.length], transparent: true })); m.position.set(x, y, z); g.add(m); sp.push({ m, vx: (Math.random() - .5) * 2.2, vy: (up || 2) + Math.random() * 1.6, vz: (Math.random() - .5) * 2.2, l: 0 }); } };
+  const k = stFace(makeElder('k')), n = stFace(makeElder('n'));
+  k.g.position.set(-10, 0, 1.9); n.g.position.set(10, 0, 1.9); k.g.scale.setScalar(1.5); n.g.scale.setScalar(1.5); g.add(k.g, n.g);
+  const can = makeWateringCan(); can.scale.setScalar(1.5); can.visible = false; g.add(can);
+  const hens = [0, 1].map(i => { const h = makeHen(); h.g.position.set(-1 + i * 3, 0, 3.4); h.g.scale.setScalar(1.3); g.add(h.g); return { h, tx: i * 3, tz: 3.4, t: Math.random() * 2 }; });
+  const bfs = [0, 1].map(i => { const q = new THREE.Group(), w1 = new THREE.Group(), w2 = new THREE.Group(); q.add(w1, w2); const col = [0xff9ec4, 0xffd85e][i]; V(w1, col, .3, .02, .28, -.15, 0, 0, false); V(w2, col, .3, .02, .28, .15, 0, 0, false); g.add(q); return { q, w1, w2, i }; });
+  const cA = new THREE.Color('#ffcf9e'), cM = new THREE.Color('#ffeec2'), cB = new THREE.Color('#bfe8ff'); let said = 0, grown = 0;
+  stCamFn = t => { const e = ease(cl01(t / 3.4)); return { x: lerp(-3.2, Math.sin(t * .3) * 1.3, e), y: lerp(7, 2.4, e), s: lerp(1.35, 1, e) }; };
   return (dt, t) => {
-    k.wave = 1; n.cheer = t > 3 ? 1 : 0; stepElder(k, dt, t); stepElder(n, dt, t); cl.forEach((q, i) => q.position.x = ((t * .3 + i * 5.3) % 18) - 9); sun.rotation.y = t;
-    crops.forEach((c, i) => { const x = Math.max(0, Math.min(1, (t - .4 - i * .22) / .9)); c.scale.setScalar(Math.max(.001, 1.5 * back(x))); });
-    const sw = Math.min(1, t / 2.6); can.position.x = -2.6 + sw * 5.2 + Math.sin(t * 2) * .1; can.position.z = .9 + Math.sin(t * 3) * .1; can.rotation.z = -.55 + Math.sin(t * 6) * .08;
+    const e = ease(cl01(t / 3)); stScene.background.copy(cA).lerp(cM, ease(cl01(t / 1.3))).lerp(cB, ease(cl01((t - 1) / 2.2))); sun.position.y = lerp(1.4, 6.4, e); sun.rotation.y = t;
+    cl.forEach((q, i) => q.position.x = ((t * .3 + i * 5.3) % 18) - 9); bl.rotation.z = t * 1.1;
+    if (t > .3 && !said) { said = 1; k.tx = -3.9; k.tz = 1.9; n.tx = 3.9; n.tz = 1.9; }
+    /* Kakek waters while walking along the field */
+    const sw = ease(cl01((t - 1.7) / 1.9)), watering = t > 1.7 && t < 3.7;
+    can.visible = t > 1.5 && t < 4.4; can.position.set(lerp(-2.7, 2.7, sw), 1.45 + Math.sin(t * 5) * .04, 1.1); can.rotation.z = watering ? -.6 + Math.sin(t * 7) * .1 : -.1;
+    if (watering) { k.tx = can.position.x - 1.3; k.tz = 1.9; if (Math.random() < .5) spark(can.position.x + .5, 1.1, 1, [0x7fc8ff, 0xb9e4ff], 1, .4); }
+    else if (t >= 3.7 && t < 3.75) { k.tx = -3.9; k.tz = 1.9; }
+    stepElder(k, dt, t); stepElder(n, dt, t);
+    if (k.tx == null && t > 1.6) { k.g.rotation.y = 0; if (!watering) k.wave = 1; } if (n.tx == null && t > 1.6) { n.g.rotation.y = 0; if (t > 4) n.cheer = 1; }
+    crops.forEach((c, i) => {
+      const t0 = 2.0 + i * .19; seeds[i].visible = t > t0 - .3 && t < t0 + .2;
+      const x = cl01((t - t0) / .9); c.scale.setScalar(Math.max(.001, 1.5 * (1 + 2.70158 * Math.pow(x - 1, 3) + 1.70158 * Math.pow(x - 1, 2))));
+      if (x > 0 && !c.userData.pop) { c.userData.pop = 1; spark(c.position.x, .6, c.position.z, [0xffe066, 0xffffff, 0x9be37f], 6, 2.2); }
+      c.rotation.z = x >= 1 ? Math.sin(t * 2 + i) * .05 : 0;
+    });
+    for (let i = sp.length - 1; i >= 0; i--) { const p = sp[i]; p.l += dt; p.vy -= 5 * dt; p.m.position.x += p.vx * dt; p.m.position.y += p.vy * dt; p.m.position.z += p.vz * dt; const r = 1 - p.l / .85; p.m.scale.setScalar(Math.max(.01, r)); p.m.material.opacity = Math.max(0, r); if (p.l > .85) { g.remove(p.m); p.m.material.dispose(); sp.splice(i, 1); } }
+    hens.forEach((o, i) => { const h = o.h, p = h.g.position, dx = o.tx - p.x, dz = o.tz - p.z, d = Math.hypot(dx, dz); o.t -= dt; if (d < .1 || o.t < 0) { o.tx = clamp(p.x + (Math.random() - .5) * 3, -4.5, 4.5); o.tz = 3 + Math.random() * 1.1; o.t = 1.5 + Math.random() * 2; }
+      if (d > .1) { p.x += dx / d * .7 * dt; p.z += dz / d * .7 * dt; h.g.rotation.y = Math.atan2(dx, dz); } h.head.rotation.x = Math.max(0, Math.sin(t * 5 + i * 2)) * 1.1; });
+    bfs.forEach(o => { const a = t * .7 + o.i * 3; o.q.position.set(Math.sin(a) * 4.5, 1.6 + Math.sin(a * 2) * .4, 2 + Math.cos(a * .8) * 1.5); o.q.rotation.y = a; const f = Math.sin(t * 22) * .9; o.w1.rotation.z = f; o.w2.rotation.z = -f; });
   };
 });
 let opOn = false, opTimers = [];
@@ -1917,16 +1957,17 @@ const cue = fn => { if (AC && AC.state === 'running') fn(); };
 ['pointerdown', 'touchend', 'keydown'].forEach(ev => addEventListener(ev, () => ac(), { once: true, passive: true }));
 function openOpening() {
   opOn = true; stOn = true; sceneUi(true); if (stRoot) stScene.remove(stRoot);
-  stRoot = new THREE.Group(); stScene.add(stRoot); stScene.background = new THREE.Color('#bfe8ff'); stT = 0; stUpd = ST_SCENES[4](stRoot);
-  stLook = [0, 1.1, 0]; stW = 15; stHh = 9; stOff = -.12; $('start').classList.add('op'); $('start').hidden = false;
-  startMusic(); cue(SFX.whoosh);
+  stRoot = new THREE.Group(); stScene.add(stRoot); stScene.background = new THREE.Color('#ffcf9e'); stT = 0; stCamFn = null; stUpd = ST_SCENES[4](stRoot);
+  stLook = [0, 1.3, 0]; stW = 13; stHh = 8; stOff = -.14; $('start').classList.add('op'); $('start').hidden = false;
+  startMusic(); cue(SFX.rooster); $('title').querySelectorAll('span').forEach((s, i) => s.style.setProperty('--i', i));
+  opTimers.push(setTimeout(() => $('start').classList.add('ready'), 5400));
   const at = (s, f) => opTimers.push(setTimeout(() => cue(f), s * 1000));
-  for (let i = 0; i < 10; i++) at(.7 + i * .22, () => SFX.pop(i % 5));
-  for (let i = 0; i < 7; i++) at(2.5 + i * .1, () => SFX.pop(i));
-  at(3.7, SFX.soft); at(4.4, SFX.good);
+  for (let i = 0; i < 10; i++) at(2.1 + i * .19, () => SFX.pop(i % 5));
+  for (let i = 0; i < 7; i++) at(2.8 + i * .1, () => SFX.pop(i));
+  at(1.7, SFX.water); at(2.4, SFX.water); at(3.1, SFX.water); at(4.0, SFX.soft); at(4.6, SFX.good);
 }
 function closeOpening() {
-  if (!opOn) return; opOn = false; opTimers.forEach(clearTimeout); opTimers = []; stOn = false; sceneUi(false); if (stRoot) { stScene.remove(stRoot); stRoot = null; } $('start').classList.remove('op');
+  if (!opOn) return; opOn = false; opTimers.forEach(clearTimeout); opTimers = []; stOn = false; sceneUi(false); if (stRoot) { stScene.remove(stRoot); stRoot = null; } $('start').classList.remove('op', 'ready'); stCamFn = null;
 }
 /* "presented by" splash: white -> logo fades in -> logo fades out to white -> white lifts to reveal the opening */
 let spTimers = [];
@@ -1939,12 +1980,13 @@ function runSplash() {
 function stSet(i) {
   if (stRoot) stScene.remove(stRoot);
   stRoot = new THREE.Group(); stScene.add(stRoot); stT = 0; stScene.background = new THREE.Color(ST_BG[i % ST_BG.length]);
-  stUpd = ST_SCENES[i](stRoot); stLook = [0, 1.2, 0]; stW = 15; stHh = 9; stOff = .14;
+  stCamFn = null; stUpd = ST_SCENES[i](stRoot); stLook = [0, 1.2, 0]; stW = 15; stHh = 9; stOff = .14;
 }
 function stTick(dt) {
   stT += dt; if (stUpd) stUpd(dt, stT);
   const w = innerWidth, h = innerHeight, a = w / h, d = Math.max(stW / (2 * Math.tan(20 * Math.PI / 180) * a), stHh / (2 * Math.tan(20 * Math.PI / 180)));
-  stCam.aspect = a; stCam.position.set(Math.sin(stT * .3) * 1.4, stLook[1] + 2.4, d); stCam.lookAt(stLook[0], stLook[1], stLook[2]);
+  let ox = Math.sin(stT * .3) * 1.4, oy = 2.4, sc = 1; if (stCamFn) { const r = stCamFn(stT); ox = r.x; oy = r.y; sc = r.s; }
+  stCam.aspect = a; stCam.position.set(ox, stLook[1] + oy, d * sc); stCam.lookAt(stLook[0], stLook[1], stLook[2]);
   stCam.setViewOffset(w, h, 0, Math.round(h * stOff), w, h); stCam.updateProjectionMatrix();
 }
 function sceneUi(on) { $('app').classList.toggle('scene-on', on); }
@@ -1992,7 +2034,7 @@ function cuRefresh() {
   $('cuCol').addEventListener('click', e => { const b = e.target.closest('.sw'); if (!b) return; SFX.pop(3); cuLook.c = +b.dataset.c; cuRefresh(); });
 })();
 function openCustom(back) {
-  cuBack = back || null; cuLook = Object.assign({ g: 0, h: 2, c: 0 }, S.look ? { g: +!!S.look.g, h: S.look.h | 0, c: S.look.c | 0 } : {});
+  stCamFn = null; cuBack = back || null; cuLook = Object.assign({ g: 0, h: 2, c: 0 }, S.look ? { g: +!!S.look.g, h: S.look.h | 0, c: S.look.c | 0 } : {});
   $('cuName').value = S.nm || ''; $('cuFarm').value = S.fm || '';
   stOn = true; sceneUi(true); stRoot && stScene.remove(stRoot); stRoot = new THREE.Group(); stScene.add(stRoot); stScene.background = new THREE.Color('#d6f0b8');
   stPlat(stRoot, 9, 7); stTree(stRoot, -3.4, -2.2, .9); stFlowers(stRoot, 18, 8, 4);

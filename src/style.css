@@ -174,15 +174,15 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
 #start.op{background:none;justify-content:flex-start;gap:10px;padding-top:calc(env(safe-area-inset-top,0px) + 8vh)}
 #start.op #btnPlay{margin-top:auto;margin-bottom:calc(env(safe-area-inset-bottom,0px) + 5vh)}
 #start.op #title span{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards}
-#start.op #sub{animation:tfade .8s ease backwards 3.7s}
-#start.op #btnPlay{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards 4.4s}
-#start.op #title span:nth-child(1){animation-delay:2.5s}
-#start.op #title span:nth-child(2){animation-delay:2.6s}
-#start.op #title span:nth-child(3){animation-delay:2.7s}
-#start.op #title span:nth-child(4){animation-delay:2.8s}
-#start.op #title span:nth-child(5){animation-delay:2.9s}
-#start.op #title span:nth-child(6){animation-delay:3.0s}
-#start.op #title span:nth-child(7){animation-delay:3.1s}
+#start.op #sub{animation:tfade .8s ease backwards 4s}
+#start.op #btnPlay{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards 4.6s}
+#start.op #title span:nth-child(1){animation-delay:2.8s}
+#start.op #title span:nth-child(2){animation-delay:2.9s}
+#start.op #title span:nth-child(3){animation-delay:3.0s}
+#start.op #title span:nth-child(4){animation-delay:3.1s}
+#start.op #title span:nth-child(5){animation-delay:3.2s}
+#start.op #title span:nth-child(6){animation-delay:3.3s}
+#start.op #title span:nth-child(7){animation-delay:3.4s}
 @keyframes tpop{0%{opacity:0;transform:scale(.3) translateY(24px);visibility:hidden}1%{visibility:visible}100%{opacity:1;transform:none;visibility:visible}}
 @keyframes tfade{0%{opacity:0;visibility:hidden}1%{visibility:visible}100%{opacity:1;visibility:visible}}
 
@@ -210,3 +210,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
 #bubble.tip{pointer-events:auto}
 #bubble.tip #bnext{display:block}
 .cuHint{font-size:14px;font-weight:700;color:#8b7a63;text-align:center;margin-top:-6px}
+#start.op.ready #title span{animation:tfloat 2.2s ease-in-out infinite;animation-delay:calc(var(--i) * -.28s)}
+#start.op.ready #btnPlay{animation:bpulse 1.3s ease-in-out infinite}
+@keyframes tfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-9px) rotate(-1.5deg)}}
+@keyframes bpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
