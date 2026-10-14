@@ -185,3 +185,28 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
 #start.op #title span:nth-child(7){animation-delay:3.1s}
 @keyframes tpop{0%{opacity:0;transform:scale(.3) translateY(24px);visibility:hidden}1%{visibility:visible}100%{opacity:1;transform:none;visibility:visible}}
 @keyframes tfade{0%{opacity:0;visibility:hidden}1%{visibility:visible}100%{opacity:1;visibility:visible}}
+
+/* hand pointer */
+#hand{position:absolute;z-index:6;pointer-events:none;transform:translate(-50%,-10px);font-size:56px;line-height:1;filter:drop-shadow(0 4px 3px rgba(0,0,0,.3))}
+#hand[hidden]{display:none}
+#hand .ring{position:absolute;left:50%;top:6px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:5px solid #fff;box-shadow:0 0 0 3px rgba(255,197,49,.8);animation:ripple 1s ease-out infinite}
+#hand.drag .ring{display:none}
+@keyframes ripple{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.scene-on #hand{display:none!important}
+/* swipe trail + flying icons + bump */
+.trail{position:absolute;z-index:5;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 3px rgba(255,197,49,.8);pointer-events:none;animation:trailfade .45s ease-out forwards}
+@keyframes trailfade{to{opacity:0;transform:scale(.3)}}
+.flyem{position:absolute;z-index:7;margin:-17px 0 0 -17px;font-size:34px;line-height:1;pointer-events:none;transition:transform .8s cubic-bezier(.5,-.25,.75,1)}
+.flyem .coin{display:block}
+.bump{animation:bumpa .35s ease}
+@keyframes bumpa{0%,100%{transform:scale(1)}45%{transform:scale(1.3)}}
+/* plot action bubbles */
+.wchip.bub{background:#fff;border-radius:50%;width:56px;height:56px;padding:0;font-size:32px;display:grid;place-items:center;border-color:var(--sun-d)}
+.wchip.bub::after{content:'!';position:absolute;top:-8px;right:-6px;width:22px;height:22px;border-radius:50%;background:#ef4b4b;color:#fff;border:2px solid #fff;font-size:15px;font-weight:800;display:grid;place-items:center}
+/* dialog name tag + next arrow */
+#avwrap{position:relative;width:64px;height:64px}
+#bname{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);background:var(--wood-d);color:#fff;font-size:13px;font-weight:800;padding:0 9px;border-radius:9px;white-space:nowrap;line-height:17px}
+#bnext{display:none;position:absolute;right:16px;bottom:6px;font-size:16px;color:var(--leaf-d);animation:chipbob 1s ease-in-out infinite}
+#bubble.tip{pointer-events:auto}
+#bubble.tip #bnext{display:block}
+.cuHint{font-size:14px;font-weight:700;color:#8b7a63;text-align:center;margin-top:-6px}

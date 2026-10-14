@@ -9,10 +9,12 @@ let FM = null; /* farm mode: the plot the child is working on (plant, water, har
 let picks = [];
 
 function showBubble(who, text) {
+  bubble.classList.remove('tip'); $('bname').textContent = who === 'n' ? 'Nenek' : 'Kakek';
   bubble.hidden = false; avatar.innerHTML = AV[who]; btext.textContent = text;
   bubble.classList.remove('pop'); void bubble.offsetWidth; bubble.classList.add('pop');
 }
-function hideBubble() { bubble.hidden = true; }
+function hideBubble() { bubble.hidden = true; bubble.classList.remove('tip'); }
+bubble.addEventListener('click', () => { if (bubble.classList.contains('tip') && tipT > 0) tipT = .01; });
 function setDots(list) {
   dotsEl.innerHTML = '';
   list.forEach(d => { const s = document.createElement('span'); if (d === '+') { s.className = 'sep'; s.textContent = '+'; } else s.className = 'dot ' + d; dotsEl.appendChild(s); });
@@ -32,8 +34,13 @@ function popNum(v3, text) {
   d.className = 'pop-n'; d.textContent = text; d.style.left = s.x + 'px'; d.style.top = s.y + 'px';
   $('app').appendChild(d); setTimeout(() => d.remove(), 1000);
 }
+function hudVis() {
+  const c = S.seenCoin || S.coins > 0 || S.done > 0, b = S.seenBasket || S.inv.some(v => v > 0) || S.eggs > 0;
+  if (c) S.seenCoin = true; if (b) S.seenBasket = true;
+  [['chipC', c], ['prog', b]].forEach(([id, on]) => { const el = $(id); const was = el.style.display !== 'none'; el.style.display = on ? '' : 'none'; if (on && !was && started) bump(id); });
+}
 function updateHud() {
-  $('coinN').textContent = S.coins;
+  hudVis(); $('coinN').textContent = S.coins;
   const inv = CROPS.map((c, i) => S.inv[i] ? c.e + S.inv[i] : '').filter(Boolean);
   if (S.eggs) inv.push('🥚' + S.eggs);
   $('prog').textContent = inv.length ? inv.join(' ') : '🧺 0';
@@ -42,7 +49,18 @@ function updateHud() {
   $('mVoice').textContent = 'Suara pemandu: ' + (S.vo ? 'nyala' : 'mati');
   $('mMusic').textContent = 'Musik: ' + (S.mus ? 'nyala' : 'mati');
 }
+function bump(id) { const el = $(id); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+/* little icons fly from a world point into a HUD counter */
+function flyToHud(html, v3, n, id) {
+  const el0 = $(id); if (!el0) return; for (let i = 0; i < Math.min(n, 6); i++) setTimeout(() => {
+    const t = el0.getBoundingClientRect(), s = screenOf(v3), el = document.createElement('div');
+    if (!t.width) return; el.className = 'flyem'; el.innerHTML = html; el.style.left = s.x + 'px'; el.style.top = s.y + 'px'; $('app').appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => { el.style.transform = 'translate(' + (t.left + t.width / 2 - s.x) + 'px,' + (t.top + t.height / 2 - s.y) + 'px) scale(.55)'; }));
+    setTimeout(() => { el.remove(); bump(id); }, 850);
+  }, i * 130);
+}
 function addCoins(n) {
+  S.seenCoin = true; hudVis(); const t0 = T && T.fx; if (t0) flyToHud(COIN, t0, n, 'chipC');
   const start = S.coins; S.coins += n;
   for (let i = 0; i < n; i++) setTimeout(() => { SFX.coin(); $('coinN').textContent = start + i + 1; }, 250 + i * 110);
 }
@@ -58,8 +76,20 @@ const ARROW = new THREE.Group();
 V(ARROW, 0xffc531, .16, .14, .16, 0, 0, 0, false); V(ARROW, 0xffc531, .36, .14, .36, 0, .14, 0, false); V(ARROW, 0xffc531, .56, .14, .56, 0, .28, 0, false); V(ARROW, 0xffc531, .24, .42, .24, 0, .42, 0, false);
 ARROW.visible = false; scene.add(ARROW);
 let arrowAt = null;
-function showArrow(v3) { arrowAt = v3.clone(); ARROW.visible = true; }
-function hideArrow() { arrowAt = null; ARROW.visible = false; }
+/* animated hand: shows where to tap, or a drag/swipe from A to B. Points are world Vector3 or screen {x,y}. */
+const handEl = $('hand'); let HND = null;
+const ptOf = p => (p.isVector3 ? screenOf(p) : p);
+function showHandTap(v3) { HND = { mode: 'tap', a: v3.clone() }; handEl.hidden = false; handEl.className = 'tap'; }
+function showHandDrag(a, b) { HND = { mode: 'drag', a: a.isVector3 ? a.clone() : a, b: b.isVector3 ? b.clone() : b }; handEl.hidden = false; handEl.className = 'drag'; }
+function showArrow(v3) { showHandTap(v3); }
+function hideArrow() { HND = null; handEl.hidden = true; }
+function stepHand() {
+  if (!HND) return; let x, y, o = 1;
+  if (HND.mode === 'tap') { const s = ptOf(HND.a); x = s.x; y = s.y + Math.abs(Math.sin(tm * 5)) * 14; }
+  else { const u = (tm * .8) % 1.9, k = Math.min(1, u / 1.15), e = k * k * (3 - 2 * k), A = ptOf(HND.a), B = ptOf(HND.b); x = lerp(A.x, B.x, e); y = lerp(A.y, B.y, e); o = u < .15 ? u / .15 : u > 1.4 ? Math.max(0, 1 - (u - 1.4) / .4) : 1; }
+  handEl.style.left = x + 'px'; handEl.style.top = y + 'px'; handEl.style.opacity = o;
+}
+const coinBtnPt = () => { const b = document.querySelector('.coinbtn'); if (!b) return { x: innerWidth / 2, y: innerHeight - 90 }; const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
 
 const ALERT = new THREE.Group();
 V(ALERT, 0xff5a4d, .22, .5, .22, 0, .2, 0, false); V(ALERT, 0xff5a4d, .22, .22, .22, 0, -.1, 0, false);
@@ -135,7 +165,21 @@ const OFR = [
 ];
 const ofrById = id => OFR.find(o => o.id === id);
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const LOCKS = {};
+function lockFor(o) {
+  if (LOCKS[o.id]) return LOCKS[o.id];
+  const pr = o.ghost.box.geometry.parameters, g = new THREE.Group(); scene.add(g);
+  V(g, o.id === 'plot' ? 0xa07c55 : 0xa6cf86, pr.width, .05, pr.depth, 0, 0, 0, false);
+  const sx = -pr.width / 2 + .6, sz = pr.depth / 2 - .4;
+  V(g, 0x8f5d2a, .12, .95, .12, sx, 0, sz, false); V(g, 0xc99a5b, .85, .55, .1, sx, .75, sz, false); V(g, 0xffd34d, .36, .36, .12, sx, .85, sz + .06, false); V(g, 0xffec99, .16, .16, .14, sx, .92, sz + .08, false);
+  g.visible = false; return (LOCKS[o.id] = g);
+}
 function refreshOffers() {
+  OFR.forEach(o => {
+    if (o.id === 'hen') return;
+    const built = o.id === 'plot' ? S.unl.plots >= 4 : S.unl[o.id], lk = lockFor(o);
+    lk.visible = !built && !o.ghost.g.visible && !(S.bld && S.bld.id === o.id); if (lk.visible) { const q = o.pos(); lk.position.set(q.x, 0, q.z); }
+  });
   OFR.forEach(o => {
     const mine = S.bld && S.bld.id === o.id, show = !mine && o.avail() && (o.id === 'hen' || !S.bld);
     o.ghost.g.visible = show; if (show) { const p = o.pos(); o.ghost.g.position.set(p.x, 0, p.z); }
@@ -148,7 +192,7 @@ function syncHens() { HENS.forEach((h, i) => { h.g.visible = i < S.hens; }); }
 let tipT = 0, notifO = null; const NT = {};
 function tip(who, text, dur) {
   if (T) { nudge(text); return; }
-  showBubble(who, text); bnum.textContent = ''; setDots([]); say(text, who); tipT = dur || 3;
+  showBubble(who, text); bubble.classList.add('tip'); bnum.textContent = ''; setDots([]); say(text, who); tipT = dur || 3;
 }
 function tipEnd() { hideBubble(); notifO = null; setHL([]); focus(FM != null ? FOC.plot(FM) : FOC.overview); }
 function checkNotif() {
@@ -242,6 +286,7 @@ TK.pay = {
     picks = []; const pr2 = o.ghost.box.geometry.parameters; setHL([{ x: p.x, z: p.z, w: pr2.width, d: pr2.depth, y: .06 }]);
     choicesEl.innerHTML = ''; const b = document.createElement('button'); b.className = 'choice coinbtn'; b.innerHTML = '<i></i>'; b.setAttribute('aria-label', 'Seret koin');
     b.addEventListener('pointerdown', e => TK.pay.drag(e, b)); choicesEl.appendChild(b);
+    if (!S.dragSeen) { S.dragSeen = true; save(); after(.7, () => { if (T && T.type === 'pay' && !T.locked && T.k === 0) showHandDrag(coinBtnPt(), new THREE.Vector3(p.x, .6, p.z)); }); }
   },
   /* coins are spent by dragging them onto the thing being made */
   drag(e, b) {
@@ -269,7 +314,7 @@ TK.pay = {
       } else { startBuild(o); complete(`Terima kasih! Kakek ${o.verb} ${o.label} ya.`, 0); }
     } else save();
   },
-  hint() { const p = T.o.pos(); return { pos: new THREE.Vector3(p.x, 1.8, p.z), text: 'Seret koinnya ke tempat yang bersinar.' }; }
+  hint() { const p = T.o.pos(); return { drag: [coinBtnPt(), new THREE.Vector3(p.x, .6, p.z)], text: 'Seret koinnya ke tempat yang bersinar.' }; }
 };
 
 /* 1. PLANT (Kakek): tap n empty holes, counting one by one */
@@ -341,8 +386,8 @@ TK.harvest = {
     const sp = S.plots[T.plot], p = P[T.plot]; T.cells = cellsIn(T.plot, 3).slice(0, T.n); T.got = new Set(); T.sel = null; T.cn = CROPS[sp.c].name; T.fx = new THREE.Vector3(6, 1.2, p.zs + 1.5); T.who = 'k';
     elderGo(ELD.k, 8.4, p.zs - .6); plGo(7.9, p.zs + 2.7); focus(FOC.plot(T.plot));
     trayClear(p.crate); p.crate.visible = true; popScale(p.crate, .2, .4);
-    header('k', `Panen ${NUM[T.n]} ${T.cn}! Tap sayurnya, lalu tap petinya.`, T.n, dotsOf(T.n, 'n'));
-    harvUi();
+    header('k', `Panen ${NUM[T.n]} ${T.cn}! Geser jarimu di atas sayurnya.`, T.n, dotsOf(T.n, 'n'));
+    harvUi(); TK.harvest.demo(!S.swipeSeen); S.swipeSeen = true;
   },
   tap(d) {
     const sp = S.plots[T.plot], p = P[T.plot];
@@ -352,15 +397,26 @@ TK.harvest = {
       T.sel = d.i; wiggle(p.cells[d.i].parts.grown); SFX.pop(0); setText('Sekarang tap petinya!'); harvUi(); return;
     }
     if (d.kind === 'crate' && d.plot === T.plot) {
-      if (T.sel == null) { nudge('Tap sayurnya dulu ya.'); return; }
-      const i = T.sel; T.sel = null; T.got.add(i);
-      const c = p.cells[i], it = c.parts.grown; scene.attach(it); it.scale.setScalar(.5);
-      const idx = T.k; T.k++; markDot(idx); SFX.pop(T.k); say(NUM[T.k], 'k'); popNum(new THREE.Vector3(p.crate.position.x, 1.2, p.crate.position.z), String(T.k));
-      trayPut(p.crate, idx, it, .5, 1.6);
-      c.parts = null; setStage(c, 'none'); c.planted = false; sp.cs[i] = 0; sp.r[i] = 0; S.inv[sp.c]++; save(); updateHud();
-      T.text = `Panen ${NUM[T.n]} ${T.cn}!`; btext.textContent = T.text;
-      if (T.k === T.n) { picks = []; setHL([]); complete(`${pick(PRAISE)} ${NUM[T.n]} ${T.cn} di peti!`, T.n); } else harvUi();
+      if (T.sel == null) { nudge('Geser jarimu di atas sayurnya ya.'); return; }
+      TK.harvest.take(T.sel);
     }
+  },
+  /* one ready plant goes into the crate (by swipe, or tap plant + tap crate) */
+  take(i) {
+    const sp = S.plots[T.plot], p = P[T.plot]; if (T.got.has(i) || !T.cells.includes(i)) return;
+    T.got.add(i); if (T.sel === i) T.sel = null;
+    const c = p.cells[i], it = c.parts.grown; scene.attach(it); it.scale.setScalar(.5);
+    const idx = T.k; T.k++; markDot(idx); SFX.pop(T.k); say(NUM[T.k], 'k'); popNum(new THREE.Vector3(p.crate.position.x, 1.2, p.crate.position.z), String(T.k));
+    flyToHud(CROPS[sp.c].e, new THREE.Vector3(c.x, 1, c.z), 1, 'prog');
+    trayPut(p.crate, idx, it, .5, 1.6);
+    c.parts = null; setStage(c, 'none'); c.planted = false; sp.cs[i] = 0; sp.r[i] = 0; S.inv[sp.c]++; save(); updateHud();
+    T.text = `Panen ${NUM[T.n]} ${T.cn}!`; btext.textContent = T.text; hideArrow();
+    if (T.k === T.n) { picks = []; setHL([]); complete(`${pick(PRAISE)} ${NUM[T.n]} ${T.cn} di peti!`, T.n); } else harvUi();
+  },
+  demo(on) {
+    const t = T.cells.filter(i => !T.got.has(i)), p = P[T.plot]; if (!t.length) return;
+    const w = i => new THREE.Vector3(p.cells[i].x, .5, p.cells[i].z);
+    if (on) after(.8, () => { if (T && T.type === 'harvest' && !T.locked && T.k === 0) { if (t.length > 1) showHandDrag(w(t[0]), w(t[t.length - 1])); else showHandTap(w(t[0])); } });
   },
   cleanup() {
     const p = P[T.plot], items = p.crate.userData.items.slice();
@@ -369,7 +425,8 @@ TK.harvest = {
   hint() {
     const p = P[T.plot];
     if (T.sel != null) { const w = worldOf(p.crateHit); return { pos: w.add(new THREE.Vector3(0, 1.0, 0)), text: 'Tap petinya.' }; }
-    const i = T.cells.find(x => !T.got.has(x)); if (i == null) return null; const c = p.cells[i]; return { pos: new THREE.Vector3(c.x, .9, c.z), text: 'Tap sayur yang bersinar.' };
+    const r = T.cells.filter(x => !T.got.has(x)); if (!r.length) return null; const q = i => new THREE.Vector3(p.cells[i].x, .5, p.cells[i].z);
+    return r.length > 1 ? { drag: [q(r[0]), q(r[r.length - 1])], text: 'Geser jarimu di atas sayurnya.' } : { pos: q(r[0]), text: 'Tap sayur yang bersinar.' };
   }
 };
 
@@ -553,7 +610,11 @@ function hubAlerts() {
   if (waiting && lastCust !== CUST) { lastCust = CUST; if (!S.tutC && FM == null) { S.tutC = true; save(); focus(FOC.kios); notifO = true; tip('n', 'Ada pelanggan! Tap pelanggannya ya.', 4.5); setHL([padOf(CUST.g, 1.2, 1.2, .04)]); return; } }
   if (hg && lastHg !== S.hungryAt) { lastHg = S.hungryAt; if (!S.tutH && FM == null) { S.tutH = true; save(); focus(FOC.coop); notifO = true; tip('n', 'Ayam lapar! Tap karung jagungnya ya.', 4.5); setHL([padOf(SACK, 1, 1, .04)]); return; } }
   const l = [];
-  if (S.tut < 4) { const st = [0, 1, 2, 3][S.tut], c = cellsIn(0, [0, 1, 2, 3][st]); c.forEach(i => l.push(cellPad(0, i))); }
+  if (S.tut < 4) {
+    const tc = cellsIn(0, [0, 1, 2, 3][S.tut]); tc.forEach(i => l.push(cellPad(0, i)));
+    if (tutIdle > 5 && tc.length && !HND) { const c = P[0].cells[tc[0]]; showHandTap(new THREE.Vector3(c.x, .5, c.z)); HND.tut = true; }
+    else if (HND && HND.tut && (tutIdle <= 5 || !tc.length)) hideArrow();
+  }
   if (hg) l.push(padOf(SACK, 1, 1, .04));
   if (waiting) l.push(padOf(CUST.g, 1.2, 1.2, .04));
   setHL(l);
@@ -564,9 +625,9 @@ const TUT = [
   { ic: '🌱', t: 'Misi 1: Tanam bibit. Tap tanah yang bersinar.' },
   { ic: '💧', t: 'Misi 2: Siram bibitnya. Tap yang bersinar.' },
   { ic: '⏳', t: 'Misi 3: Tunggu tumbuh. Tap tanamannya biar semangat!' },
-  { ic: '🧺', t: 'Misi 4: Panen! Tap sayur yang bersinar.' }
+  { ic: '🧺', t: 'Misi 4: Panen! Geser jarimu di atas sayurnya.' }
 ];
-const TUT_TIP = ['Ayo tanam bibit! Tap tanah yang bersinar.', 'Siram bibitnya ya! Tap yang bersinar.', 'Tap tanamannya biar semangat dan cepat tumbuh. Atau jalan-jalan pakai joystick!', 'Sayurnya sudah matang! Tap yang bersinar untuk panen.'];
+const TUT_TIP = ['Ayo tanam bibit! Tap tanah yang bersinar.', 'Siram bibitnya ya! Tap yang bersinar.', 'Tap tanamannya biar semangat dan cepat tumbuh. Atau jalan-jalan pakai joystick!', 'Sayurnya sudah matang! Geser jarimu di atas sayurnya untuk panen.'];
 let mKey = '';
 function tutSync() {
   const show = started && !touring && S.tut < 4, key = show ? 'm' + S.tut : '';
@@ -632,13 +693,45 @@ function stepPlots(dt) {
   if (S.tut === 2 && cellsIn(0, 3).length) advTut(3);
 }
 
+/* ---------- living world: butterflies (tap to count them) and a bird passing over ---------- */
+const BF = []; let bfN = 0;
+for (let i = 0; i < 3; i++) {
+  const g = new THREE.Group(), col = [0xff9ec4, 0xffd85e, 0xa9d8ff, 0xc9a0ff][i % 4], wl = new THREE.Group(), wr = new THREE.Group(); g.add(wl, wr);
+  V(g, 0x4a3a2a, .07, .07, .26, 0, 0, 0, false); V(wl, col, .32, .02, .3, -.16, 0, 0, false); V(wr, col, .32, .02, .3, .16, 0, 0, false);
+  g.position.set(rand(2, 14), 1.3, rand(2, 14)); scene.add(g);
+  BF.push({ g, wl, wr, i, tx: rand(2, 14), ty: 1.2, tz: rand(2, 14), sp: .8 + Math.random() * .5, esc: 0, hit: H(g, 1.2, 1.2, 1.2, 0, 0, 0, { kind: 'bfly', i }) });
+}
+function stepBF(dt) {
+  BF.forEach(b => {
+    const p = b.g.position, dx = b.tx - p.x, dy = b.ty - p.y, dz = b.tz - p.z, d = Math.hypot(dx, dy, dz);
+    if (d < .35) { b.tx = rand(1.5, 15); b.tz = rand(1.5, 15); b.ty = .9 + Math.random() * 1.4; }
+    const sp = (b.esc > 0 ? 3.6 : b.sp) * dt; b.esc = Math.max(0, b.esc - dt);
+    if (d > .01) { p.x += dx / d * sp; p.y += dy / d * sp + Math.sin(tm * 6 + b.i) * .006; p.z += dz / d * sp; b.g.rotation.y = Math.atan2(dx, dz); }
+    const f = Math.sin(tm * 22 + b.i * 2) * .9; b.wl.rotation.z = f; b.wr.rotation.z = -f;
+  });
+}
+function catchBf(b) {
+  bfN = bfN % 10 + 1; SFX.pop(bfN % 6); say(NUM[bfN], 'k'); const p = b.g.position;
+  popNum(p.clone().add(new THREE.Vector3(0, .6, 0)), String(bfN)); burst(p.clone(), [0xff8fb1, 0xffe066, 0xffffff], 9, 2.2, .1, .8, 3);
+  b.esc = 1.6; b.tx = clamp(p.x + rand(-6, 6), 1.5, 15); b.tz = clamp(p.z + rand(-6, 6), 1.5, 15); b.ty = 2 + Math.random();
+}
+const BIRD = { g: new THREE.Group(), on: false, t: 12 };
+{ const g = BIRD.g; V(g, 0x2b2d42, .55, .22, .24, 0, 0, 0, false); V(g, 0x2b2d42, .2, .2, .2, .36, .06, 0, false); V(g, 0xffb02e, .13, .06, .08, .5, .04, 0, false);
+  BIRD.wl = new THREE.Group(); BIRD.wr = new THREE.Group(); g.add(BIRD.wl, BIRD.wr); V(BIRD.wl, 0x3b3d5c, .26, .04, .6, 0, .1, -.3, false); V(BIRD.wr, 0x3b3d5c, .26, .04, .6, 0, .1, .3, false); g.visible = false; scene.add(g); }
+function stepBird(dt) {
+  const b = BIRD;
+  if (!b.on) { b.t -= dt; if (b.t <= 0) { b.on = true; b.g.visible = true; b.g.position.set(-4, 5 + Math.random() * 2, rand(3, 13)); b.g.rotation.y = Math.PI / 2; SFX.soft(); } return; }
+  b.g.position.x += 3.4 * dt; b.g.position.y += Math.sin(tm * 2) * .004; const f = Math.sin(tm * 14) * .7; b.wl.rotation.x = f; b.wr.rotation.x = -f;
+  if (b.g.position.x > 22) { b.on = false; b.g.visible = false; b.t = 25 + Math.random() * 20; }
+}
+
 /* ---------- idle hints + ambient taps ---------- */
 function stepHint(dt) {
   if (!T || T.locked) return;
   T.idle += dt;
   if (T.idle > 8) {
     T.idle = 0; const h = TK[T.type].hint && TK[T.type].hint();
-    if (h) { if (h.pos) showArrow(h.pos); say(h.text, T.who); }
+    if (h) { if (h.drag) showHandDrag(h.drag[0], h.drag[1]); else if (h.pos) showArrow(h.pos); say(h.text, T.who); }
   }
 }
 function ambientTap(d) {
@@ -648,7 +741,14 @@ function ambientTap(d) {
 
 /* ---------- world labels: price tags, stock counts, orders ---------- */
 function hookChip(key, fn) { const c = chips[key]; if (c && !c.el.onclick) { c.el.onclick = () => { ac(); SFX.pop(2); fn(); }; c.el.onpointerdown = e => e.stopPropagation(); } }
+function plotNeed(k) { const c = [0, 1, 2, 3].map(i => cnt(k, i)); return c[3] ? 'harvest' : c[1] ? 'water' : c[0] ? 'plant' : null; }
+const NEEDIC = { harvest: '🧺', water: '💧', plant: '🌱' };
 function updateChips() {
+  for (let k = 0; k < S.unl.plots; k++) {
+    const nd = plotNeed(k), show = nd && !T && FM !== k && started && !touring && !stOn;
+    setChip('pb' + k, show ? new THREE.Vector3(4.5, 1.7, PZ[k] + 1) : null, NEEDIC[nd] || '', 'bub tap');
+    const c = chips['pb' + k]; if (c && !c.el.onclick) { c.el.onclick = () => { if (T) return; const n = plotNeed(k); if (!n) return; ac(); SFX.pop(2); if (FM !== k) enterFarm(k); farmAct(k, n); }; c.el.onpointerdown = e => e.stopPropagation(); }
+  }
   OFR.forEach(o => {
     const p = o.pos(), v = new THREE.Vector3(p.x, 1.8, p.z);
     if (!o.ghost.g.visible || (T && !(T.type === 'pay' && T.id === o.id))) { setChip('o' + o.id, null); return; }
@@ -713,6 +813,7 @@ function allPicks() {
   OFR.forEach(o => { if (o.ghost.g.visible) hub.push(o.ghost.hit); });
   if (S.hens > 0) hub.push(SACK.userData.hit);
   if (S.unl.kios) hub.push(vegHit, eggHit);
+  BF.forEach(b => hub.push(b.hit));
   if (CUST && CUST.ready && !CUST.busy) hub.push(CUST.g.hit);
   return hub.concat(base);
 }
@@ -723,12 +824,25 @@ function pickAt(cx, cy) {
   const hits = ray.intersectObjects(allPicks(), false);
   return hits.length ? Object.assign({ pt: hits[0].point }, hits[0].object.userData) : null;
 }
+let swipe = null;
+function trail(x, y) { const d = document.createElement('i'); d.className = 'trail'; d.style.left = x + 'px'; d.style.top = y + 'px'; $('app').appendChild(d); setTimeout(() => d.remove(), 450); }
+canvas.addEventListener('pointermove', e => {
+  if (!swipe || !T || T.locked || T.type !== 'harvest' || paused) return;
+  const x1 = e.clientX, y1 = e.clientY, dx = x1 - swipe.x, dy = y1 - swipe.y, n = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 12));
+  for (let s = 1; s <= n; s++) {
+    const d = pickAt(swipe.x + dx * s / n, swipe.y + dy * s / n);
+    if (d && d.kind === 'cell' && d.plot === T.plot && T.cells.includes(d.i) && !T.got.has(d.i)) { T.idle = 0; TK.harvest.take(d.i); if (!T || T.locked) break; }
+  }
+  swipe = { x: x1, y: y1 }; trail(x1, y1);
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(n => canvas.addEventListener(n, () => { swipe = null; }));
 canvas.addEventListener('pointerdown', e => {
   if (!started || paused || touring) return;
-  ac();
+  ac(); tutIdle = 0; swipe = { x: e.clientX, y: e.clientY };
   const d = pickAt(e.clientX, e.clientY); if (!d) return;
   if (d.kind === 'hen') { ambientTap(d); if (T) T.idle = 0; else { exitFarm(); tryFeed(); } return; }
   if (d.kind === 'elder') { ambientTap(d); if (T) T.idle = 0; return; }
+  if (d.kind === 'bfly') { catchBf(BF[d.i]); return; }
   if (!T) {
     if (d.kind === 'plot') tapPlot(d.plot, d.pt);
     else if (FM != null && d.kind !== 'plot' && (exitFarm(), false)) return;
@@ -812,7 +926,7 @@ function frame(now) {
   const k = 1 - Math.exp(-dt * 4.2);
   cam.cx += (cam.x - cam.cx) * k; cam.cz += (cam.z - cam.cz) * k; cam.cw += (cam.w - cam.cw) * k; cam.ch += (cam.h - cam.ch) * k;
   applyCam();
-  if (arrowAt) ARROW.position.set(arrowAt.x, arrowAt.y + .3 + Math.sin(tm * 6) * .16, arrowAt.z);
+  stepHand();
   stepHint(dt); stepHL();
   GHM.opacity = .3 + .15 * Math.sin(tm * 3);
   if (started && !paused) {
@@ -821,7 +935,7 @@ function frame(now) {
     if (S.bld && Date.now() >= S.bld.at) finishBuild();
     stepBuild(dt);
     if (S.hens > 0 && S.snd) { cluckT -= dt; if (cluckT <= 0) { cluckT = 3 + Math.random() * 6; SFX.cluck(); const h = HENS[rand(0, S.hens - 1)]; hop(h.g, .15, .25); } }
-    stepHub(dt); tutSync(); toolsSync();
+    stepHub(dt); tutSync(); toolsSync(); stepBF(dt); stepBird(dt);
   }
   updateChips();
   renderer.render(scene, camera);
