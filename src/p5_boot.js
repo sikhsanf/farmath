@@ -15,5 +15,7 @@ window.__farm = {
   picksNow: () => allPicks().map(m => { const p = screenOf(worldOf(m)); return { d: m.userData, x: p.x, y: p.y }; }),
   cellXY: (k, i) => { const c = P[k].cells[i]; return screenOf(new THREE.Vector3(c.x, .3, c.z)); },
   PLpos: () => PL.g.position,
+  care: { beginBed, endBed, leftSec, get on() { return bedOn; } },
+  op: t => { if (!opOn) openOpening(); stT = t; },
   setState: o => { Object.assign(S, o); save(); refreshOffers(); updateHud(); }
 };

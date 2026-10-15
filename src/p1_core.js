@@ -63,6 +63,8 @@ const SFX = {
   coin: () => { tone(988, .08, 'square', .06); tone(1319, .2, 'square', .06, 1, .07); },
   water: () => tone(900, .16, 'sine', .08, .5),
   hello: () => { tone(660, .1, 'triangle', .12); tone(880, .16, 'triangle', .12, 1, .1); },
+  thunder: () => { tone(70, 1.4, 'sawtooth', .16, .4); tone(110, 1, 'square', .07, .35, .05); tone(55, 1.7, 'sine', .2, .5, .1); },
+  moo: () => { tone(150, .9, 'sawtooth', .07, .65); tone(225, .8, 'triangle', .07, .6, .03); },
   whoosh: () => tone(300, .18, 'sine', .08, 1.8),
   rooster: () => { tone(520, .14, 'sawtooth', .07, 1.1); tone(700, .12, 'sawtooth', .07, 1, .17); tone(660, .1, 'sawtooth', .06, 1, .32); tone(900, .5, 'sawtooth', .07, .55, .44); }
 };
@@ -107,7 +109,7 @@ const CAM_EL = THREE.MathUtils.degToRad(50), CAM_AZ = Math.PI / 4;
 const camDir = new THREE.Vector3(Math.cos(CAM_EL) * Math.sin(CAM_AZ), Math.sin(CAM_EL), Math.cos(CAM_EL) * Math.cos(CAM_AZ));
 const IS_SMALL = Math.min(screen.width, screen.height) < 700 || /iPhone|iPad|Android/i.test(navigator.userAgent);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0xbad89a, .88));
+const HEMI = new THREE.HemisphereLight(0xffffff, 0xbad89a, .88); scene.add(HEMI);
 const sun = new THREE.DirectionalLight(0xfff0d2, .78);
 sun.position.set(0, 18, 9); sun.target.position.set(8, 0, 8);
 sun.castShadow = true;
@@ -323,6 +325,7 @@ function makeHen() {
   return { g, head, tx: null, tz: null, wait: Math.random() * 2, eat: 0, busy: false, ph: Math.random() * 6, home: { x: 12, z: 3.2 } };
 }
 function stepHen(h, dt, tm) {
+  if (h.sleep) { h.head.rotation.x = .85; h.g.position.y = -.03; return; }
   let moving = false;
   if (h.tx != null) {
     const dx = h.tx - h.g.position.x, dz = h.tz - h.g.position.z, d = Math.hypot(dx, dz);

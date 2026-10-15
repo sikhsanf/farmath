@@ -4,7 +4,7 @@ const AV = {
   k: '<svg viewBox="0 0 64 64"><rect x="14" y="30" width="6" height="14" rx="3" fill="#f5f5f5"/><rect x="44" y="30" width="6" height="14" rx="3" fill="#f5f5f5"/><circle cx="32" cy="38" r="17" fill="#f1c9a0"/><path d="M22 46q10-7 20 0q-10 7-20 0z" fill="#f5f5f5"/><circle cx="26" cy="36" r="2.4" fill="#2b2b2b"/><circle cx="38" cy="36" r="2.4" fill="#2b2b2b"/><circle cx="21" cy="42" r="2.6" fill="#e58a80"/><circle cx="43" cy="42" r="2.6" fill="#e58a80"/><ellipse cx="32" cy="25" rx="27" ry="6" fill="#f2c14e"/><rect x="20" y="11" width="24" height="15" rx="4" fill="#f2c14e"/><rect x="20" y="20" width="24" height="5" fill="#c0392b"/></svg>',
   n: '<svg viewBox="0 0 64 64"><circle cx="32" cy="9" r="8" fill="#dadade"/><circle cx="32" cy="38" r="17" fill="#f1c9a0"/><path d="M13 40Q11 12 32 12Q53 12 51 40Q47 26 32 25Q17 26 13 40z" fill="#dadade"/><circle cx="25" cy="38" r="5.5" fill="none" stroke="#444" stroke-width="2"/><circle cx="39" cy="38" r="5.5" fill="none" stroke="#444" stroke-width="2"/><path d="M30.5 37h3" stroke="#444" stroke-width="2"/><circle cx="25" cy="38" r="1.8" fill="#2b2b2b"/><circle cx="39" cy="38" r="1.8" fill="#2b2b2b"/><path d="M26 47q6 5 12 0" fill="none" stroke="#b5533c" stroke-width="2.4" stroke-linecap="round"/><circle cx="20" cy="45" r="2.8" fill="#f2a6a0"/><circle cx="44" cy="45" r="2.8" fill="#f2a6a0"/></svg>'
 };
-let T = null, paused = false, started = false, tm = 0;
+let T = null, paused = false, started = false, tm = 0, bedOn = false;
 let FM = null; /* farm mode: the plot the child is working on (plant, water, harvest without leaving) */
 let picks = [];
 
@@ -908,7 +908,7 @@ let resetArmed = false;
 $('mReset').addEventListener('click', () => {
   if (!resetArmed) { resetArmed = true; $('mReset').textContent = 'Yakin? Ketuk lagi'; setTimeout(() => { resetArmed = false; $('mReset').textContent = 'Hapus karakter'; }, 3000); return; }
   try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
-  S = Object.assign(DEF(), { snd: S.snd, mus: S.mus, vo: S.vo, story: true }); save(); location.reload();
+  S = Object.assign(DEF(), { snd: S.snd, mus: S.mus, vo: S.vo, story: true, pl: S.pl }); save(); location.reload();
 });
 $('btnSay').addEventListener('click', () => { if (T) say(T.text, T.who); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { stopSpeech(); try { if (AC) AC.suspend(); } catch (e) { /* ignore */ } } else ac(); });
@@ -929,7 +929,8 @@ function frame(now) {
   stepHand();
   stepHint(dt); stepHL();
   GHM.opacity = .3 + .15 * Math.sin(tm * 3);
-  if (started && !paused) {
+  careTick(dt);
+  if (started && !paused && !bedOn) {
     stepPlots(dt);
     growT -= dt; if (growT <= 0) { growT = .25; refreshOffers(); syncKios(); }
     if (S.bld && Date.now() >= S.bld.at) finishBuild();

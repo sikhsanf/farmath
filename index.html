@@ -179,15 +179,15 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
 #start.op{background:none;justify-content:flex-start;gap:10px;padding-top:calc(env(safe-area-inset-top,0px) + 8vh)}
 #start.op #btnPlay{margin-top:auto;margin-bottom:calc(env(safe-area-inset-bottom,0px) + 5vh)}
 #start.op #title span{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards}
-#start.op #sub{animation:tfade .8s ease backwards 4s}
-#start.op #btnPlay{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards 4.6s}
-#start.op #title span:nth-child(1){animation-delay:2.8s}
-#start.op #title span:nth-child(2){animation-delay:2.9s}
-#start.op #title span:nth-child(3){animation-delay:3.0s}
-#start.op #title span:nth-child(4){animation-delay:3.1s}
-#start.op #title span:nth-child(5){animation-delay:3.2s}
-#start.op #title span:nth-child(6){animation-delay:3.3s}
-#start.op #title span:nth-child(7){animation-delay:3.4s}
+#start.op #sub{animation:tfade .8s ease backwards 9.2s}
+#start.op #btnPlay{animation:tpop .7s cubic-bezier(.34,1.56,.64,1) backwards 9.7s}
+#start.op #title span:nth-child(1){animation-delay:8.2s}
+#start.op #title span:nth-child(2){animation-delay:8.3s}
+#start.op #title span:nth-child(3){animation-delay:8.4s}
+#start.op #title span:nth-child(4){animation-delay:8.5s}
+#start.op #title span:nth-child(5){animation-delay:8.6s}
+#start.op #title span:nth-child(6){animation-delay:8.7s}
+#start.op #title span:nth-child(7){animation-delay:8.8s}
 @keyframes tpop{0%{opacity:0;transform:scale(.3) translateY(24px);visibility:hidden}1%{visibility:visible}100%{opacity:1;transform:none;visibility:visible}}
 @keyframes tfade{0%{opacity:0;visibility:hidden}1%{visibility:visible}100%{opacity:1;visibility:visible}}
 
@@ -220,9 +220,66 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
 @keyframes tfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-9px) rotate(-1.5deg)}}
 @keyframes bpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
 
+#opSkip{display:none;position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:14px;padding:9px 16px;border-radius:22px;border:3px solid var(--wood-d);border-bottom-width:6px;background:rgba(255,255,255,.82);color:var(--wood-dd);font:800 15px/1 inherit;font-family:inherit}
+#opSkip:active{transform:translateY(3px);border-bottom-width:3px}
+#start.op #opSkip{display:block;animation:tfade .6s ease backwards 1.2s}
+#start.op.ready #opSkip,#start.op.quick #opSkip{display:none}
+#start.op.quick #title span,#start.op.quick #sub,#start.op.quick #btnPlay{animation-delay:0s!important}
+
+/* ---------- parental controls + bedtime ---------- */
+#skyfx{position:absolute;inset:0;opacity:0;transition:opacity 2.4s ease;pointer-events:none}
+#app.bed-night #skyfx{background:linear-gradient(180deg,#0a1235,#22306b 55%,#34447f);opacity:1}
+#app.bed-storm #skyfx{background:linear-gradient(180deg,#39424f,#5d6877 60%,#79858f);opacity:1}
+#app.bed-sick #skyfx{background:linear-gradient(180deg,#a7b8a8,#c9d5c0 55%,#dfe6cf);opacity:1}
+#app:not(.bedtime) #skyfx{opacity:0}
+#skyfx .moon{display:none;position:absolute;top:12%;right:14%;width:64px;height:64px;border-radius:50%;background:#fff6c9;box-shadow:inset -14px -6px 0 #f0dfa0,0 0 40px 14px rgba(255,246,201,.45)}
+#app.bed-night #skyfx .moon{display:block}
+#skyfx .star{position:absolute;width:5px;height:5px;background:#fff;border-radius:1px;animation:twk 2.4s ease-in-out infinite}
+@keyframes twk{0%,100%{opacity:.25}50%{opacity:1}}
+#rain{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+#flash{position:absolute;inset:0;z-index:11;background:#fff;opacity:0;pointer-events:none;transition:opacity .12s}
+#flash.on{opacity:.75}
+#app.bedtime #hud,#app.bedtime #tools,#app.bedtime #mission,#app.bedtime #hand,#app.bedtime #joy,#app.bedtime #bubble,#app.bedtime #choices,#app.bedtime .wchip,#app.bedtime .trail{display:none!important}
+#bed{position:absolute;inset:0;z-index:12;touch-action:none}
+#bedCard{position:absolute;left:12px;right:12px;margin:0 auto;max-width:460px;top:calc(env(safe-area-inset-top,0px) + 18px);display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:center;background:var(--cream);border:3px solid var(--wood-d);border-bottom-width:7px;border-radius:24px;padding:12px 16px;font-weight:700;font-size:19px;line-height:1.25;color:var(--wood-dd);animation:tpop .7s cubic-bezier(.34,1.56,.64,1) .8s backwards}
+#bedIcon{font-size:44px;line-height:1;text-align:center}
+#bedBtn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 16px);padding:10px 18px;border-radius:22px;border:3px solid var(--wood-d);border-bottom-width:6px;background:rgba(255,248,230,.92);color:var(--wood-dd);font:800 16px/1 inherit;font-family:inherit}
+#bedBtn:active{transform:translateX(-50%) translateY(3px);border-bottom-width:3px}
+.zz{position:absolute;z-index:2;pointer-events:none;width:60px;height:60px;margin:-50px 0 0 -30px}
+.zz i,.zz b{position:absolute;left:18px;bottom:0;font-style:normal;font-weight:800;font-size:26px;color:#fff;-webkit-text-stroke:5px #3b4a8c;paint-order:stroke fill;opacity:0;animation:zfloat 2.6s ease-in infinite}
+.zz b{font-size:34px;-webkit-text-stroke:0;animation:zbob 1.6s ease-in-out infinite;opacity:1}
+.zz .d1{animation-delay:.85s;left:26px}.zz .d2{animation-delay:1.7s;left:12px}
+@keyframes zfloat{0%{transform:translate(0,0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translate(14px,-46px) scale(1.2);opacity:0}}
+@keyframes zbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.tw{position:absolute;z-index:13;font-size:34px;pointer-events:none;transform:translate(-50%,-50%);animation:floatUp 1s ease-out forwards}
+#careToast{position:absolute;z-index:9;left:50%;top:calc(env(safe-area-inset-top,0px) + 70px);transform:translateX(-50%);background:var(--cream);border:3px solid var(--wood-d);border-bottom-width:6px;border-radius:22px;padding:8px 16px;font-weight:800;font-size:18px;color:var(--wood-dd);pointer-events:none;white-space:nowrap}
+#careToast.show{animation:tpop .6s cubic-bezier(.34,1.56,.64,1)}
+#gate,#parent{z-index:40;background:rgba(40,28,10,.5)}
+#gateCard,#parentCard{max-width:420px;width:100%}
+#gateCard p{font-size:22px;font-weight:800;margin:6px 0 10px;text-align:center;color:var(--wood-dd)}
+#gateIn{width:100%;box-sizing:border-box;font:800 26px/1 inherit;font-family:inherit;text-align:center;padding:12px;border-radius:16px;border:3px solid var(--wood-d);background:#fff;color:var(--wood-dd)}
+.gateBtns{display:flex;gap:10px}.gateBtns .mbtn{flex:1}
+#gateCard.bad{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+#parentCard{max-height:calc(100% - 20px);overflow:auto;display:flex;flex-direction:column;gap:10px}
+.pRow{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;color:var(--wood-dd);font-size:17px}
+.pRow b{font-size:20px;color:var(--leaf-d)}
+.pHint{font-size:15px;font-weight:700;color:var(--wood-d);margin-top:-4px}
+#pLim{width:100%;height:36px;accent-color:#4caf50}
+#pModes .opt{height:auto;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:14px;padding:8px 6px;flex:1}
+#pModes .opt span{font-size:24px}
+#menu .card{max-height:calc(100% - 16px);overflow:auto}
+.pCol{display:flex;flex-direction:column;gap:10px}
+#parentCard h2{font-size:26px}
+#parentCard .mbtn{height:48px;font-size:18px}
+@media (max-height:520px) and (min-width:600px){#parentCard{max-width:760px;display:grid;grid-template-columns:1fr 1fr;column-gap:22px;row-gap:6px;padding:14px 20px}#parentCard h2{grid-column:1/3;margin:0}}
+
 </style>
 <div id="app">
+  <div id="skyfx"><i class="moon"></i></div>
   <canvas id="c"></canvas>
+  <canvas id="rain"></canvas>
+  <div id="flash"></div>
 
   <div id="hud">
     <button id="btnPause" class="hbtn" aria-label="Jeda"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg></button>
@@ -254,6 +311,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
 
   <div id="start" class="overlay" hidden>
     <h1 id="title" aria-label="Farmath"><span>F</span><span>a</span><span>r</span><span>m</span><span>a</span><span>t</span><span>h</span></h1>
+    <button id="opSkip" aria-label="Lewati">Lewati ▶▶</button>
     <p id="sub">Kebun hitung-hitungan</p>
     <button id="btnPlay" aria-label="Main"><i></i></button>
   </div>
@@ -267,7 +325,44 @@ button{font-family:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;
       <button id="mMusic" class="mbtn">Musik: nyala</button>
       <button id="mAv" class="mbtn">Ganti karakter</button>
       <button id="mStory" class="mbtn">Putar cerita</button>
+      <button id="mParent" class="mbtn">🔒 Orang tua</button>
       <button id="mReset" class="mbtn warn">Hapus karakter</button>
+    </div>
+  </div>
+
+  <div id="careToast" hidden></div>
+
+  <div id="bed" hidden>
+    <div id="bedCard"><div id="bedIcon"></div><div id="bedTxt"></div></div>
+    <button id="bedBtn">🔒 Orang tua</button>
+  </div>
+
+  <div id="gate" class="overlay" hidden>
+    <div class="card" id="gateCard">
+      <h2>🔒 Orang tua</h2>
+      <p id="gateQ"></p>
+      <input id="gateIn" type="number" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Jawaban">
+      <div class="gateBtns"><button id="gateNo" class="mbtn">Batal</button><button id="gateGo" class="mbtn go">Buka</button></div>
+    </div>
+  </div>
+
+  <div id="parent" class="overlay" hidden>
+    <div class="card" id="parentCard">
+      <h2>Pengaturan orang tua</h2>
+      <div class="pCol">
+        <div class="pRow"><label for="pLim">Batas main per hari</label><b id="pLimTxt"></b></div>
+        <input id="pLim" type="range" min="0" max="120" step="5" value="0">
+        <div class="pHint" id="pUse"></div>
+        <div class="pRow"><label>Kalau waktu habis</label></div>
+        <div class="cuRow" id="pModes"></div>
+      </div>
+      <div class="pCol">
+        <div class="pRow"><label>Tambah waktu hari ini</label></div>
+        <div class="gateBtns"><button id="pPlus10" class="mbtn">+10 menit</button><button id="pPlus30" class="mbtn">+30 menit</button></div>
+        <button id="pReset" class="mbtn">Atur ulang waktu hari ini</button>
+        <button id="pPreview" class="mbtn">Lihat adegan waktu habis</button>
+        <button id="pClose" class="mbtn go">Selesai</button>
+      </div>
     </div>
   </div>
 
@@ -374,6 +469,8 @@ const SFX = {
   coin: () => { tone(988, .08, 'square', .06); tone(1319, .2, 'square', .06, 1, .07); },
   water: () => tone(900, .16, 'sine', .08, .5),
   hello: () => { tone(660, .1, 'triangle', .12); tone(880, .16, 'triangle', .12, 1, .1); },
+  thunder: () => { tone(70, 1.4, 'sawtooth', .16, .4); tone(110, 1, 'square', .07, .35, .05); tone(55, 1.7, 'sine', .2, .5, .1); },
+  moo: () => { tone(150, .9, 'sawtooth', .07, .65); tone(225, .8, 'triangle', .07, .6, .03); },
   whoosh: () => tone(300, .18, 'sine', .08, 1.8),
   rooster: () => { tone(520, .14, 'sawtooth', .07, 1.1); tone(700, .12, 'sawtooth', .07, 1, .17); tone(660, .1, 'sawtooth', .06, 1, .32); tone(900, .5, 'sawtooth', .07, .55, .44); }
 };
@@ -418,7 +515,7 @@ const CAM_EL = THREE.MathUtils.degToRad(50), CAM_AZ = Math.PI / 4;
 const camDir = new THREE.Vector3(Math.cos(CAM_EL) * Math.sin(CAM_AZ), Math.sin(CAM_EL), Math.cos(CAM_EL) * Math.cos(CAM_AZ));
 const IS_SMALL = Math.min(screen.width, screen.height) < 700 || /iPhone|iPad|Android/i.test(navigator.userAgent);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0xbad89a, .88));
+const HEMI = new THREE.HemisphereLight(0xffffff, 0xbad89a, .88); scene.add(HEMI);
 const sun = new THREE.DirectionalLight(0xfff0d2, .78);
 sun.position.set(0, 18, 9); sun.target.position.set(8, 0, 8);
 sun.castShadow = true;
@@ -634,6 +731,7 @@ function makeHen() {
   return { g, head, tx: null, tz: null, wait: Math.random() * 2, eat: 0, busy: false, ph: Math.random() * 6, home: { x: 12, z: 3.2 } };
 }
 function stepHen(h, dt, tm) {
+  if (h.sleep) { h.head.rotation.x = .85; h.g.position.y = -.03; return; }
   let moving = false;
   if (h.tx != null) {
     const dx = h.tx - h.g.position.x, dz = h.tz - h.g.position.z, d = Math.hypot(dx, dz);
@@ -920,7 +1018,7 @@ const AV = {
   k: '<svg viewBox="0 0 64 64"><rect x="14" y="30" width="6" height="14" rx="3" fill="#f5f5f5"/><rect x="44" y="30" width="6" height="14" rx="3" fill="#f5f5f5"/><circle cx="32" cy="38" r="17" fill="#f1c9a0"/><path d="M22 46q10-7 20 0q-10 7-20 0z" fill="#f5f5f5"/><circle cx="26" cy="36" r="2.4" fill="#2b2b2b"/><circle cx="38" cy="36" r="2.4" fill="#2b2b2b"/><circle cx="21" cy="42" r="2.6" fill="#e58a80"/><circle cx="43" cy="42" r="2.6" fill="#e58a80"/><ellipse cx="32" cy="25" rx="27" ry="6" fill="#f2c14e"/><rect x="20" y="11" width="24" height="15" rx="4" fill="#f2c14e"/><rect x="20" y="20" width="24" height="5" fill="#c0392b"/></svg>',
   n: '<svg viewBox="0 0 64 64"><circle cx="32" cy="9" r="8" fill="#dadade"/><circle cx="32" cy="38" r="17" fill="#f1c9a0"/><path d="M13 40Q11 12 32 12Q53 12 51 40Q47 26 32 25Q17 26 13 40z" fill="#dadade"/><circle cx="25" cy="38" r="5.5" fill="none" stroke="#444" stroke-width="2"/><circle cx="39" cy="38" r="5.5" fill="none" stroke="#444" stroke-width="2"/><path d="M30.5 37h3" stroke="#444" stroke-width="2"/><circle cx="25" cy="38" r="1.8" fill="#2b2b2b"/><circle cx="39" cy="38" r="1.8" fill="#2b2b2b"/><path d="M26 47q6 5 12 0" fill="none" stroke="#b5533c" stroke-width="2.4" stroke-linecap="round"/><circle cx="20" cy="45" r="2.8" fill="#f2a6a0"/><circle cx="44" cy="45" r="2.8" fill="#f2a6a0"/></svg>'
 };
-let T = null, paused = false, started = false, tm = 0;
+let T = null, paused = false, started = false, tm = 0, bedOn = false;
 let FM = null; /* farm mode: the plot the child is working on (plant, water, harvest without leaving) */
 let picks = [];
 
@@ -1824,7 +1922,7 @@ let resetArmed = false;
 $('mReset').addEventListener('click', () => {
   if (!resetArmed) { resetArmed = true; $('mReset').textContent = 'Yakin? Ketuk lagi'; setTimeout(() => { resetArmed = false; $('mReset').textContent = 'Hapus karakter'; }, 3000); return; }
   try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
-  S = Object.assign(DEF(), { snd: S.snd, mus: S.mus, vo: S.vo, story: true }); save(); location.reload();
+  S = Object.assign(DEF(), { snd: S.snd, mus: S.mus, vo: S.vo, story: true, pl: S.pl }); save(); location.reload();
 });
 $('btnSay').addEventListener('click', () => { if (T) say(T.text, T.who); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { stopSpeech(); try { if (AC) AC.suspend(); } catch (e) { /* ignore */ } } else ac(); });
@@ -1845,7 +1943,8 @@ function frame(now) {
   stepHand();
   stepHint(dt); stepHL();
   GHM.opacity = .3 + .15 * Math.sin(tm * 3);
-  if (started && !paused) {
+  careTick(dt);
+  if (started && !paused && !bedOn) {
     stepPlots(dt);
     growT -= dt; if (growT <= 0) { growT = .25; refreshOffers(); syncKios(); }
     if (S.bld && Date.now() >= S.bld.at) finishBuild();
@@ -1861,8 +1960,8 @@ function frame(now) {
 /* ---------- Farmath p4: story slides, character creator, farm tour ---------- */
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const stScene = new THREE.Scene(), stCam = new THREE.PerspectiveCamera(40, 1, .5, 200);
-stScene.add(new THREE.HemisphereLight(0xffffff, 0xb8d89a, .95));
-{ const d = new THREE.DirectionalLight(0xfff0d2, .8); d.position.set(-5, 10, 8); stScene.add(d); }
+const stHemi = new THREE.HemisphereLight(0xffffff, 0xb8d89a, .95), stDir = new THREE.DirectionalLight(0xfff0d2, .8);
+stDir.position.set(-5, 10, 8); stScene.add(stHemi, stDir);
 let stCamFn = null, stRoot = null, stUpd = null, stT = 0, stOn = false, stBack = null, stLook = [0, 1.2, 0], stW = 15, stHh = 9, stOff = .12;
 const ST_BG = ['#bfe8ff', '#d6f0b8', '#ffe8c4', '#fff0b8'];
 
@@ -1901,54 +2000,136 @@ const ST_SCENES = [
     const coins = [0, 1, 2].map(i => { const c = new THREE.Group(); g.add(c); V(c, 0xffd34d, .7, .7, .14, 0, 0, 0, false); V(c, 0xffe58a, .4, .4, .16, 0, .15, 0, false); c.position.set(-1.8 + i * 1.8, 3.4, -.6); return c; });
     return (dt, t) => { k.cheer = 1; n.cheer = 1; stepElder(k, dt, t); stepElder(n, dt, t); coins.forEach((c, i) => { c.rotation.y = t * 2.5 + i; c.position.y = 3.4 + Math.sin(t * 2 + i) * .3; }); }; }
 ];
-/* opening animation: seeds pop up into a field while Kakek waters, then the title comes in */
+/* ---- opening animation v3: sunrise -> crops grow -> farm animals -> pull back to the whole farm ---- */
+function makeCow() {
+  const g = new THREE.Group(), W = 0xfaf6ee, K = 0x3a3a40, P = 0xf4a6b4;
+  [[-.28, -.5], [.28, -.5], [-.28, .5], [.28, .5]].forEach(p => V(g, W, .2, .5, .2, p[0], 0, p[1]));
+  [[-.28, -.5], [.28, -.5], [-.28, .5], [.28, .5]].forEach(p => V(g, 0x2b2b2b, .22, .1, .22, p[0], 0, p[1], false));
+  V(g, W, .9, .75, 1.5, 0, .45, 0); V(g, K, .94, .4, .5, 0, .66, -.4); V(g, K, .5, .78, .45, 0, .45, .3); V(g, P, .3, .12, .3, 0, .36, -.1, false);
+  const tail = new THREE.Group(); tail.position.set(0, 1.15, -.76); g.add(tail); V(tail, W, .07, .55, .07, 0, -.55, 0, false); V(tail, K, .12, .14, .12, 0, -.68, 0, false);
+  const head = new THREE.Group(); head.position.set(0, 1.0, .8); g.add(head);
+  V(head, W, .56, .5, .5, 0, -.25, .1); V(head, P, .4, .25, .12, 0, -.25, .39); V(head, K, .1, .06, .04, -.1, -.1, .46, false); V(head, K, .1, .06, .04, .1, -.1, .46, false);
+  V(head, 0x222222, .07, .07, .04, -.17, .05, .36, false); V(head, 0x222222, .07, .07, .04, .17, .05, .36, false);
+  V(head, 0xf2e6c8, .08, .18, .08, -.2, .25, .08, false); V(head, 0xf2e6c8, .08, .18, .08, .2, .25, .08, false);
+  V(head, W, .22, .08, .14, -.38, .02, .1, false); V(head, W, .22, .08, .14, .38, .02, .1, false);
+  return { g, head, tail };
+}
+function makeChick() {
+  const h = makeHen();
+  h.g.traverse(m => { if (!m.isMesh) return; const c = m.material.color.getHex(); m.material = m.material.clone(); if (c === 0xffffff || c === 0xf0f0f0 || c === 0xeaeaea) m.material.color.setHex(0xffe45e); });
+  h.g.scale.setScalar(.5); return h;
+}
+let opQuick = false;
 ST_SCENES.push(g => {
-  const ease = x => x * x * (3 - 2 * x), cl01 = x => Math.max(0, Math.min(1, x));
-  stPlat(g, 14, 9); stTree(g, -5.8, -2.6); stFlowers(g, 22, 12, 6);
-  /* back hills + windmill give depth */
-  [[-3.2, 3.4, 1.1, 0x86cf62], [1.2, 4.6, 1.5, 0x79c457], [-6, 2.6, .9, 0x8fd46a]].forEach(h => V(g, h[3], h[1], h[2], 2.2, h[0], 0, -3.9, false));
-  const mill = new THREE.Group(); mill.position.set(4.9, 0, -3.5); g.add(mill);
+  const ease = x => x * x * (3 - 2 * x), cl01 = x => Math.max(0, Math.min(1, x)), mix = (a, b, k) => a + (b - a) * k;
+  const FX = [-4.2, -3.1, -2.0, -.9, .2], ROWZ = [-.5, .8], AISLE = .15, HOMEZ = 1.9;
+  const canX = t => -4.4 + 5.1 * cl01((t - 2.7) / 2.3);
+  const root = g; g = new THREE.Group(); root.add(g); const far = new THREE.Group(); root.add(far); /* g = the farm (hidden during the sunrise close-up), far = hills + sky things */
+  stPlat(g, 14, 9); stTree(g, -5.9, -2.8); stFlowers(g, 22, 12, 6);
+  /* far hills: the sun climbs from behind them */
+  const hills = [];
+  [[0, -9.5, 30, 1.9, 0x5fae52], [-7, -8.5, 12, 1.7, 0x56a24b], [8, -8.8, 12, 1.5, 0x66b659]].forEach(h => { const m = V(far, h[4], h[2], h[3], 3, h[0], -.5, h[1], false); m.material = m.material.clone(); hills.push({ m, c: new THREE.Color(h[4]) }); });
+  const mill = new THREE.Group(); mill.position.set(5.6, 0, -3.5); g.add(mill);
   V(mill, 0xf2e6d0, 1.3, 2.1, 1.3, 0, 0, 0, false); V(mill, 0xc44536, 1.6, .6, 1.6, 0, 2.1, 0, false); V(mill, 0x8a5a33, .5, .9, .06, 0, 0, .66, false);
   const bl = new THREE.Group(); bl.position.set(0, 1.9, .85); mill.add(bl); V(bl, 0xf6efe0, .2, 2.7, .06, 0, -1.35, 0, false); V(bl, 0xf6efe0, 2.7, .2, .06, 0, -.1, 0, false); V(bl, 0xd9c7a0, .3, .3, .1, 0, -.15, 0, false);
-  const cl = stClouds(g), sun = stSun(g);
-  V(g, 0x8a5a33, 7.4, .28, 3.2, 0, 0, -.6, false);
-  const crops = [], seeds = [];
-  for (let i = 0; i < 10; i++) {
-    const x = -2.6 + (i % 5) * 1.3, z = -1.2 + Math.floor(i / 5) * 1.3;
-    const c = cropParts(i % 4).grown; c.position.set(x, .28, z); c.scale.setScalar(.001); g.add(c); crops.push(c);
-    const sd = new THREE.Group(); sd.position.set(x, .28, z); g.add(sd); V(sd, 0x4a2f18, .22, .12, .22, 0, 0, 0, false); sd.visible = false; seeds.push(sd);
-  }
-  /* sparkles (own tiny particle system for this scene) */
+  const cl = stClouds(far);
+  /* the sun: glowing, with slowly turning rays */
+  const sunG = new THREE.Group(); far.add(sunG);
+  sunG.add(new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.4, 1.4), new THREE.MeshBasicMaterial({ color: 0xffe27a })));
+  const glow = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.1, 1), new THREE.MeshBasicMaterial({ color: 0xfff2b0, transparent: true, opacity: .35 })); glow.rotation.z = Math.PI / 4; sunG.add(glow);
+  const rayG = new THREE.Group(); sunG.add(rayG);
+  for (let i = 0; i < 8; i++) { const p = new THREE.Group(); p.rotation.z = i * Math.PI / 4; const r = new THREE.Mesh(new THREE.BoxGeometry(.16, 1, .1), new THREE.MeshBasicMaterial({ color: 0xfff2b0, transparent: true, opacity: .55 })); r.position.y = 1.55; p.add(r); rayG.add(p); }
+  /* birds crossing the sky */
+  const birds = [0, 1, 2].map(i => { const b = new THREE.Group(), w1 = new THREE.Group(), w2 = new THREE.Group(); b.add(w1, w2); V(b, 0x3b3b4a, .2, .14, .3, 0, 0, 0, false); V(w1, 0x3b3b4a, .5, .04, .22, -.28, 0, 0, false); V(w2, 0x3b3b4a, .5, .04, .22, .28, 0, 0, false); far.add(b); return { b, w1, w2, i }; });
+  /* the field */
+  V(g, 0x8a5a33, 5.8, .28, 3, -2, 0, .15, false);
+  const crops = [], mounds = [];
+  ROWZ.forEach(z => FX.forEach((x, ci) => {
+    const c = cropParts((ci + (z > 0 ? 2 : 0)) % 4).grown; c.position.set(x, .28, z); c.scale.setScalar(.001); g.add(c); crops.push({ c, x, z, i: crops.length });
+    mounds.push(V(g, 0x6e4524, .45, .1, .45, x, .28, z, false));
+  }));
+  /* sparkle bits */
   const sg = new THREE.BoxGeometry(.13, .13, .13), sp = [];
-  const spark = (x, y, z, cols, n, up) => { for (let i = 0; i < n; i++) { const m = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: cols[i % cols.length], transparent: true })); m.position.set(x, y, z); g.add(m); sp.push({ m, vx: (Math.random() - .5) * 2.2, vy: (up || 2) + Math.random() * 1.6, vz: (Math.random() - .5) * 2.2, l: 0 }); } };
-  const k = stFace(makeElder('k')), n = stFace(makeElder('n'));
-  k.g.position.set(-10, 0, 1.9); n.g.position.set(10, 0, 1.9); k.g.scale.setScalar(1.5); n.g.scale.setScalar(1.5); g.add(k.g, n.g);
-  const can = makeWateringCan(); can.scale.setScalar(1.5); can.visible = false; g.add(can);
-  const hens = [0, 1].map(i => { const h = makeHen(); h.g.position.set(-1 + i * 3, 0, 3.4); h.g.scale.setScalar(1.3); g.add(h.g); return { h, tx: i * 3, tz: 3.4, t: Math.random() * 2 }; });
-  const bfs = [0, 1].map(i => { const q = new THREE.Group(), w1 = new THREE.Group(), w2 = new THREE.Group(); q.add(w1, w2); const col = [0xff9ec4, 0xffd85e][i]; V(w1, col, .3, .02, .28, -.15, 0, 0, false); V(w2, col, .3, .02, .28, .15, 0, 0, false); g.add(q); return { q, w1, w2, i }; });
-  const cA = new THREE.Color('#ffcf9e'), cM = new THREE.Color('#ffeec2'), cB = new THREE.Color('#bfe8ff'); let said = 0, grown = 0;
-  stCamFn = t => { const e = ease(cl01(t / 3.4)); return { x: lerp(-3.2, Math.sin(t * .3) * 1.3, e), y: lerp(7, 2.4, e), s: lerp(1.35, 1, e) }; };
+  const spark = (x, y, z, cols, n, up, vx0) => { for (let i = 0; i < n; i++) { const m = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: cols[i % cols.length], transparent: true })); m.position.set(x, y, z); g.add(m); sp.push({ m, vx: (Math.random() - .5) * 2.2 + (vx0 || 0), vy: (up || 2) + Math.random() * 1.6, vz: (Math.random() - .5) * 2.2, l: 0 }); } };
+  /* the animal pen */
+  V(g, 0xe9d78f, 3.8, .05, 4.2, 4.9, 0, .1, false);
+  for (let i = 0; i <= 5; i++) V(g, 0xb98550, .16, .75, .16, 3.1 + i * .72, 0, -1.9, false);
+  V(g, 0xcf9b60, 3.7, .1, .07, 4.9, .45, -1.9, false);
+  for (let i = 0; i <= 3; i++) V(g, 0xb98550, .16, .75, .16, 3.0, 0, -1.9 + i * .9, false);
+  V(g, 0xcf9b60, .07, .1, 2.7, 3.0, .45, -.55, false);
+  const cow = makeCow(); cow.g.position.set(4.9, 0, -.8); cow.g.scale.setScalar(1.15); g.add(cow.g);
+  const hens = [[3.9, 1.1], [5.1, .5], [5.9, 1.3]].map((p, i) => { const h = makeHen(); h.g.scale.setScalar(1.3); g.add(h.g); return { h, bx: p[0], bz: p[1], i }; });
+  const chicks = [[4.3, .2], [4.7, 1.5], [5.5, 1.0], [3.7, 0]].map((p, i) => { const h = makeChick(); g.add(h.g); return { h, bx: p[0], bz: p[1], i }; });
+  /* the grandparents */
+  const k = makeElder('k'), n = makeElder('n'); k.g.scale.setScalar(1.5); n.g.scale.setScalar(1.5); g.add(k.g, n.g);
+  const can = makeWateringCan(); can.scale.setScalar(1.5); g.add(can);
+  n.g.position.set(5.9, 0, .3); V(n.armL, 0xc98e4f, .42, .2, .36, 0, -.78, .05, false);
+  const bfs = [0, 1, 2].map(i => { const q = new THREE.Group(), w1 = new THREE.Group(), w2 = new THREE.Group(); q.add(w1, w2); const col = [0xff9ec4, 0xffd85e, 0xc9a0ff][i]; V(w1, col, .3, .02, .28, -.15, 0, 0, false); V(w2, col, .3, .02, .28, .15, 0, 0, false); g.add(q); return { q, w1, w2, i }; });
+  const walk = (e, t, on) => {
+    if (on) { const s = Math.sin(t * 12); e.legL.rotation.x = s * .7; e.legR.rotation.x = -s * .7; e.armL.rotation.x = -s * .6; e.armR.rotation.x = s * .6; e.armL.rotation.z = e.armR.rotation.z = 0; e.g.position.y = Math.abs(s) * .1; }
+    else { e.legL.rotation.x = e.legR.rotation.x = e.armL.rotation.x = e.armR.rotation.x = 0; e.armL.rotation.z = e.armR.rotation.z = 0; e.g.position.y = 0; }
+  };
+  const turn = (e, to, dt) => { e.g.rotation.y += (to - e.g.rotation.y) * Math.min(1, dt * 9); };
+  const cA = new THREE.Color('#2c3a78'), cB = new THREE.Color('#ff9a6b'), cC = new THREE.Color('#ffd9a0'), cD = new THREE.Color('#bfe8ff'), tint = new THREE.Color();
+  let mooAt = 6.9, mooT = -9, tossT = 0;
+  const MIXC = (a, b, k) => ({ p: [mix(a.p[0], b.p[0], k), mix(a.p[1], b.p[1], k), mix(a.p[2], b.p[2], k)], l: [mix(a.l[0], b.l[0], k), mix(a.l[1], b.l[1], k), mix(a.l[2], b.l[2], k)], off: mix(a.off, b.off, k) });
+  const A0 = { p: [0, .6, 10], l: [0, 3.8, -6], off: 0 }, A1 = { p: [.4, .9, 10], l: [0, 4.2, -6], off: 0 };
+  /* portrait screens are narrow, so the close-ups pull back a little to keep the subject in frame */
+  const FF = () => Math.max(1, Math.sqrt(1.78 / (innerWidth / innerHeight)));
+  const camB = cx => ({ p: [cx + .4, 1.05 + .35 * FF(), .2 + 5.8 * FF()], l: [cx + .4, 1.05, .2], off: 0 });
+  const C0 = () => ({ p: [3.3, .85 + .45 * FF(), 5.8 * FF()], l: [3.3, .85, 0], off: 0 }), C1 = () => ({ p: [5.0, .9 + .45 * FF(), 5.8 * FF()], l: [5, .9, 0], off: 0 });
+  stCamFn = (t, d) => {
+    const W = { p: [Math.sin(t * .3) * 1.4, stLook[1] + 2.4, d], l: [0, stLook[1], 0], off: stOff };
+    let c;
+    if (t < 2.2) c = MIXC(A0, A1, ease(cl01(t / 2.2)));
+    else if (t < 2.8) c = MIXC(A1, camB(canX(2.8)), ease((t - 2.2) / .6));
+    else if (t < 5) c = camB(canX(t));
+    else if (t < 5.7) c = MIXC(camB(canX(5)), C0(), ease((t - 5) / .7));
+    else if (t < 7.3) c = MIXC(C0(), C1(), ease((t - 5.7) / 1.6));
+    else if (t < 9.5) c = MIXC(C1(), W, ease((t - 7.3) / 2.2));
+    else c = W;
+    return { px: c.p[0], py: c.p[1], pz: c.p[2], lx: c.l[0], ly: c.l[1], lz: c.l[2], off: c.off };
+  };
   return (dt, t) => {
-    const e = ease(cl01(t / 3)); stScene.background.copy(cA).lerp(cM, ease(cl01(t / 1.3))).lerp(cB, ease(cl01((t - 1) / 2.2))); sun.position.y = lerp(1.4, 6.4, e); sun.rotation.y = t;
+    /* sky, light and hills warm up with the sunrise */
+    stScene.background.copy(cA).lerp(cB, ease(cl01(t / 1.4))).lerp(cC, ease(cl01((t - 1.2) / 1.2))).lerp(cD, ease(cl01((t - 2.4) / 2.2)));
+    const lt = ease(cl01(t / 2.4)); stHemi.intensity = mix(.4, .95, lt); stDir.intensity = mix(.25, .8, lt);
+    hills.forEach(h => h.m.material.color.copy(h.c).multiplyScalar(mix(.4, 1, lt)));
+    const kk = ease(cl01((t - 2.4) / 7)), ya = mix(-1.8, 3.6, ease(cl01(t / 2.3)));
+    sunG.position.set(mix(0, 6, kk), mix(ya, 6.4, kk), mix(-7.5, -5, kk)); sunG.scale.setScalar(mix(4.2, 1, kk)); rayG.rotation.z = t * .25;
     cl.forEach((q, i) => q.position.x = ((t * .3 + i * 5.3) % 18) - 9); bl.rotation.z = t * 1.1;
-    if (t > .3 && !said) { said = 1; k.tx = -3.9; k.tz = 1.9; n.tx = 3.9; n.tz = 1.9; }
-    /* Kakek waters while walking along the field */
-    const sw = ease(cl01((t - 1.7) / 1.9)), watering = t > 1.7 && t < 3.7;
-    can.visible = t > 1.5 && t < 4.4; can.position.set(lerp(-2.7, 2.7, sw), 1.45 + Math.sin(t * 5) * .04, 1.1); can.rotation.z = watering ? -.6 + Math.sin(t * 7) * .1 : -.1;
-    if (watering) { k.tx = can.position.x - 1.3; k.tz = 1.9; if (Math.random() < .5) spark(can.position.x + .5, 1.1, 1, [0x7fc8ff, 0xb9e4ff], 1, .4); }
-    else if (t >= 3.7 && t < 3.75) { k.tx = -3.9; k.tz = 1.9; }
-    stepElder(k, dt, t); stepElder(n, dt, t);
-    if (k.tx == null && t > 1.6) { k.g.rotation.y = 0; if (!watering) k.wave = 1; } if (n.tx == null && t > 1.6) { n.g.rotation.y = 0; if (t > 4) n.cheer = 1; }
-    crops.forEach((c, i) => {
-      const t0 = 2.0 + i * .19; seeds[i].visible = t > t0 - .3 && t < t0 + .2;
-      const x = cl01((t - t0) / .9); c.scale.setScalar(Math.max(.001, 1.5 * (1 + 2.70158 * Math.pow(x - 1, 3) + 1.70158 * Math.pow(x - 1, 2))));
-      if (x > 0 && !c.userData.pop) { c.userData.pop = 1; spark(c.position.x, .6, c.position.z, [0xffe066, 0xffffff, 0x9be37f], 6, 2.2); }
-      c.rotation.z = x >= 1 ? Math.sin(t * 2 + i) * .05 : 0;
+    birds.forEach(o => { const x = ((t * 1.3 + o.i * 7) % 26) - 13; o.b.position.set(x, 4.6 + o.i * .7 + Math.sin(t * 2 + o.i) * .25, -6 - o.i); const f = Math.sin(t * 13 + o.i) * .7; o.w1.rotation.z = f; o.w2.rotation.z = -f; });
+    /* Kakek: walks in, pours water along the row, sets the can down, comes to the front and waves, then paces */
+    const cx = canX(t); let kon = false, kv = 0;
+    g.visible = t > 2.0; k.g.visible = t > 1.5;
+    if (t < 2.7) { k.g.position.set(mix(-8, cx - 1, cl01((t - 1.5) / 1.2)), 0, AISLE); turn(k, Math.PI / 2, 1); kon = t > 1.5 && t < 2.7; can.visible = true; }
+    else if (t < 5) { k.g.position.set(cx - 1, 0, AISLE); turn(k, Math.PI / 2, 1); kon = true; can.visible = true; }
+    else if (t < 6) { const u = ease(cl01((t - 5) / 1)); k.g.position.set(mix(canX(5) - 1, -2, u), 0, mix(AISLE, HOMEZ, u)); turn(k, 0, dt); kon = u < 1; can.visible = false; }
+    else if (t < 9) { k.g.position.set(-2, 0, HOMEZ); turn(k, 0, dt); }
+    else { const ph = (t - 9) * .45, vx = -Math.sin(ph); k.g.position.set(-3 + Math.cos(ph), 0, HOMEZ); kv = vx; kon = Math.abs(vx) > .3; turn(k, kon ? (vx > 0 ? Math.PI / 2 : -Math.PI / 2) : 0, dt); }
+    walk(k, t, kon);
+    if (t < 5) { k.armL.rotation.x = -1.35; can.position.set(k.g.position.x + 1.05, 1.25 + Math.sin(t * 6) * .03, k.g.position.z + .63); can.rotation.z = t > 2.7 ? -.65 + Math.sin(t * 7) * .1 : -.15; can.rotation.y = 0; }
+    else { can.position.set(canX(5) - 1 + 1.0, 0, AISLE + .75); can.rotation.set(0, .3, 0); can.visible = t > 5; }
+    if (!kon && t >= 5.8) { k.armR.rotation.z = 2.5 + Math.sin(t * 12) * .45; }
+    if (t > 2.8 && t < 5 && Math.random() < .7) spark(can.position.x + .75, can.position.y - .1, can.position.z, [0x7fc8ff, 0xb9e4ff], 1, .2);
+    /* Nenek tosses grain to the chicks */
+    n.g.visible = t > 4.4; { const u = cl01((t - 4.4) / 1.2); n.g.position.x = mix(10, 5.9, ease(u)); const arriving = u < 1; walk(n, t, arriving); turn(n, arriving ? -Math.PI / 2 : -.35, dt);
+      if (!arriving) { n.armL.rotation.x = -1.25; n.armR.rotation.x = -.7 + Math.sin(t * 6) * .6; tossT -= dt; if (tossT <= 0) { tossT = .7; spark(n.g.position.x - .6, 1.35, n.g.position.z + .5, [0xf3d45a, 0xffe9a8], 4, 1.2, -1.6); } } }
+    /* crops pop up where the water reaches */
+    crops.forEach(o => {
+      const x = cl01((canX(t) - o.x + .35) / .9), s = x <= 0 ? .001 : Math.max(.001, 1.5 * (1 + 2.70158 * Math.pow(x - 1, 3) + 1.70158 * Math.pow(x - 1, 2)));
+      o.c.scale.setScalar(s); mounds[o.i].visible = s < .4;
+      if (x > 0 && !o.c.userData.pop) { o.c.userData.pop = 1; if (!opQuick) { spark(o.x, .6, o.z, [0xffe066, 0xffffff, 0x9be37f], 6, 2.2); if (o.z > 0) cue(() => SFX.pop(o.i % 5)); } }
+      o.c.rotation.z = x >= 1 ? Math.sin(t * 2 + o.i) * .05 : 0;
     });
-    for (let i = sp.length - 1; i >= 0; i--) { const p = sp[i]; p.l += dt; p.vy -= 5 * dt; p.m.position.x += p.vx * dt; p.m.position.y += p.vy * dt; p.m.position.z += p.vz * dt; const r = 1 - p.l / .85; p.m.scale.setScalar(Math.max(.01, r)); p.m.material.opacity = Math.max(0, r); if (p.l > .85) { g.remove(p.m); p.m.material.dispose(); sp.splice(i, 1); } }
-    hens.forEach((o, i) => { const h = o.h, p = h.g.position, dx = o.tx - p.x, dz = o.tz - p.z, d = Math.hypot(dx, dz); o.t -= dt; if (d < .1 || o.t < 0) { o.tx = clamp(p.x + (Math.random() - .5) * 3, -4.5, 4.5); o.tz = 3 + Math.random() * 1.1; o.t = 1.5 + Math.random() * 2; }
-      if (d > .1) { p.x += dx / d * .7 * dt; p.z += dz / d * .7 * dt; h.g.rotation.y = Math.atan2(dx, dz); } h.head.rotation.x = Math.max(0, Math.sin(t * 5 + i * 2)) * 1.1; });
-    bfs.forEach(o => { const a = t * .7 + o.i * 3; o.q.position.set(Math.sin(a) * 4.5, 1.6 + Math.sin(a * 2) * .4, 2 + Math.cos(a * .8) * 1.5); o.q.rotation.y = a; const f = Math.sin(t * 22) * .9; o.w1.rotation.z = f; o.w2.rotation.z = -f; });
+    for (let i = sp.length - 1; i >= 0; i--) { const p = sp[i]; p.l += dt; p.vy -= 5 * dt; p.m.position.x += p.vx * dt; p.m.position.y += p.vy * dt; p.m.position.z += p.vz * dt; const r = 1 - p.l / .8; p.m.scale.setScalar(Math.max(.01, r)); p.m.material.opacity = Math.max(0, r); if (p.l > .8) { g.remove(p.m); p.m.material.dispose(); sp.splice(i, 1); } }
+    /* animals */
+    hens.forEach(o => { const a = t * .7 + o.i * 2.1, x = o.bx + Math.sin(a) * .4, z = o.bz + Math.cos(a * .8) * .25, vx = Math.cos(a) * .4 * .7, vz = -Math.sin(a * .8) * .25 * .56; o.h.g.position.set(x, 0, z); o.h.g.rotation.y = Math.atan2(vx, vz); o.h.head.rotation.x = Math.max(0, Math.sin(t * 5 + o.i * 2)) * 1.1; });
+    chicks.forEach(o => { const a = t * 1.5 + o.i * 1.7, x = o.bx + Math.sin(a) * .5, z = o.bz + Math.cos(a * .9) * .3, vx = Math.cos(a) * .75, vz = -Math.sin(a * .9) * .27; o.h.g.position.set(x, Math.abs(Math.sin(t * 9 + o.i)) * .05, z); o.h.g.rotation.y = Math.atan2(vx, vz); o.h.head.rotation.x = Math.max(0, Math.sin(t * 7 + o.i * 3)) * 1.2; });
+    if (t > mooAt) { mooT = t; mooAt = t + 11; cue(SFX.moo); }
+    const mt = t - mooT, raise = mt < 1.1 ? Math.sin(Math.min(1, mt / 1.1) * Math.PI) : 0;
+    cow.head.rotation.x = .38 + Math.sin(t * 1.4) * .1 - raise * .75; cow.tail.rotation.z = Math.sin(t * 2.2) * .45; cow.g.position.y = raise * .03;
+    bfs.forEach(o => { const a = t * .7 + o.i * 2.2; o.q.position.set(-2 + Math.sin(a) * 4.5, 1.6 + Math.sin(a * 2) * .4, 1.2 + Math.cos(a * .8) * 1.4); o.q.rotation.y = a; const f = Math.sin(t * 22) * .9; o.w1.rotation.z = f; o.w2.rotation.z = -f; });
   };
 });
 let opOn = false, opTimers = [];
@@ -1956,19 +2137,25 @@ let opOn = false, opTimers = [];
 const cue = fn => { if (AC && AC.state === 'running') fn(); };
 ['pointerdown', 'touchend', 'keydown'].forEach(ev => addEventListener(ev, () => ac(), { once: true, passive: true }));
 function openOpening() {
-  opOn = true; stOn = true; sceneUi(true); if (stRoot) stScene.remove(stRoot);
-  stRoot = new THREE.Group(); stScene.add(stRoot); stScene.background = new THREE.Color('#ffcf9e'); stT = 0; stCamFn = null; stUpd = ST_SCENES[4](stRoot);
-  stLook = [0, 1.3, 0]; stW = 13; stHh = 8; stOff = -.14; $('start').classList.add('op'); $('start').hidden = false;
-  startMusic(); cue(SFX.rooster); $('title').querySelectorAll('span').forEach((s, i) => s.style.setProperty('--i', i));
-  opTimers.push(setTimeout(() => $('start').classList.add('ready'), 5400));
+  opOn = true; opQuick = false; stOn = true; sceneUi(true); if (stRoot) stScene.remove(stRoot);
+  stRoot = new THREE.Group(); stScene.add(stRoot); stScene.background = new THREE.Color('#2c3a78'); stT = 0; stCamFn = null; stUpd = ST_SCENES[4](stRoot);
+  stLook = [0, 1.3, 0]; stW = 13; stHh = 8; stOff = -.14; $('start').classList.remove('quick', 'ready'); $('start').classList.add('op'); $('start').hidden = false;
+  startMusic(); $('title').querySelectorAll('span').forEach((s, i) => s.style.setProperty('--i', i));
+  opTimers.push(setTimeout(() => $('start').classList.add('ready'), 10400));
   const at = (s, f) => opTimers.push(setTimeout(() => cue(f), s * 1000));
-  for (let i = 0; i < 10; i++) at(2.1 + i * .19, () => SFX.pop(i % 5));
-  for (let i = 0; i < 7; i++) at(2.8 + i * .1, () => SFX.pop(i));
-  at(1.7, SFX.water); at(2.4, SFX.water); at(3.1, SFX.water); at(4.0, SFX.soft); at(4.6, SFX.good);
+  at(1.0, SFX.rooster); at(2.9, SFX.water); at(3.5, SFX.water); at(4.1, SFX.water); at(4.7, SFX.water); at(5.9, SFX.cluck); at(6.5, SFX.cluck);
+  for (let i = 0; i < 7; i++) at(8.2 + i * .1, () => SFX.pop(i));
+  at(9.2, SFX.soft); at(9.7, SFX.good);
 }
 function closeOpening() {
-  if (!opOn) return; opOn = false; opTimers.forEach(clearTimeout); opTimers = []; stOn = false; sceneUi(false); if (stRoot) { stScene.remove(stRoot); stRoot = null; } $('start').classList.remove('op', 'ready'); stCamFn = null;
+  if (!opOn) return; opOn = false; opTimers.forEach(clearTimeout); opTimers = []; stOn = false; sceneUi(false); if (stRoot) { stScene.remove(stRoot); stRoot = null; } $('start').classList.remove('op', 'ready', 'quick'); stCamFn = null;
+  stHemi.intensity = .95; stDir.intensity = .8;
 }
+$('opSkip').addEventListener('click', () => {
+  if (!opOn) return; ac(); opTimers.forEach(clearTimeout); opTimers = []; opQuick = true; stT = Math.max(stT, 9.6);
+  $('start').classList.add('quick'); SFX.whoosh(); setTimeout(() => { cue(SFX.good); }, 700);
+  opTimers.push(setTimeout(() => $('start').classList.add('ready'), 1400));
+});
 /* "presented by" splash: white -> logo fades in -> logo fades out to white -> white lifts to reveal the opening */
 let spTimers = [];
 function runSplash() {
@@ -1985,9 +2172,10 @@ function stSet(i) {
 function stTick(dt) {
   stT += dt; if (stUpd) stUpd(dt, stT);
   const w = innerWidth, h = innerHeight, a = w / h, d = Math.max(stW / (2 * Math.tan(20 * Math.PI / 180) * a), stHh / (2 * Math.tan(20 * Math.PI / 180)));
-  let ox = Math.sin(stT * .3) * 1.4, oy = 2.4, sc = 1; if (stCamFn) { const r = stCamFn(stT); ox = r.x; oy = r.y; sc = r.s; }
-  stCam.aspect = a; stCam.position.set(ox, stLook[1] + oy, d * sc); stCam.lookAt(stLook[0], stLook[1], stLook[2]);
-  stCam.setViewOffset(w, h, 0, Math.round(h * stOff), w, h); stCam.updateProjectionMatrix();
+  let px = Math.sin(stT * .3) * 1.4, py = stLook[1] + 2.4, pz = d, lx = stLook[0], ly = stLook[1], lz = stLook[2], off = stOff;
+  if (stCamFn) { const r = stCamFn(stT, d); if (r.px != null) { px = r.px; py = r.py; pz = r.pz; lx = r.lx; ly = r.ly; lz = r.lz; off = r.off; } else { px = r.x; py = stLook[1] + r.y; pz = d * r.s; } }
+  stCam.aspect = a; stCam.position.set(px, py, pz); stCam.lookAt(lx, ly, lz);
+  stCam.setViewOffset(w, h, 0, Math.round(h * off), w, h); stCam.updateProjectionMatrix();
 }
 function sceneUi(on) { $('app').classList.toggle('scene-on', on); }
 
@@ -2089,6 +2277,175 @@ $('btnPlay').addEventListener('click', afterTitle);
 $('mAv').addEventListener('click', () => { $('menu').hidden = true; openCustom(() => { $('menu').hidden = !paused; }); });
 $('mStory').addEventListener('click', () => { $('menu').hidden = true; openStory(() => { $('menu').hidden = !paused; }); });
 
+/* ---------- p4b: parental controls (daily play limit) + bedtime scenes ---------- */
+/* S.pl = { lim: minutes per day (0 = no limit), day, used: seconds played today, bonus: extra minutes granted today,
+            mode: 'night' | 'storm' | 'sick' | 'acak', cur: today's random pick, warned } */
+const dayKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+function plState() {
+  if (!S.pl) S.pl = { lim: 0, day: '', used: 0, bonus: 0, mode: 'acak', cur: '', warned: false };
+  const p = S.pl;
+  if (p.day !== dayKey()) { p.day = dayKey(); p.used = 0; p.bonus = 0; p.cur = ''; p.warned = false; save(); if (bedOn) endBed(); }
+  return p;
+}
+const leftSec = () => { const p = plState(); return p.lim > 0 ? p.lim * 60 + p.bonus * 60 - p.used : Infinity; };
+const fmtMin = s => { const m = Math.floor(s / 60); return m + ' menit'; };
+
+/* ----- bedtime scenes ----- */
+const HEMI_C = new THREE.Color(0xffffff), SUN_C = new THREE.Color(0xfff0d2), cTmp = new THREE.Color(), cTmp2 = new THREE.Color();
+const BED = {
+  night: { hi: .34, hc: 0x9fb2ff, si: .1, sc: 0x8faaff, icon: '🌙', who: 'n', txt: () => `Hoaam... sudah malam. Kakek, Nenek, dan ayam-ayam mau tidur. Sampai jumpa besok ya, ${S.nm || 'petani cilik'}!` },
+  storm: { hi: .55, hc: 0xb8c2d0, si: .22, sc: 0xaab6c8, icon: '⛈️', who: 'k', txt: () => `Wah, hujan badai! Ayo semua berteduh di lumbung. Kita main lagi besok ya, ${S.nm || 'petani cilik'}!` },
+  sick: { hi: .72, hc: 0xdde6d6, si: .45, sc: 0xe8efd8, icon: '🤒', who: 'n', txt: () => 'Aduh, Kakek dan Nenek lagi demam. Mereka harus istirahat dulu. Besok pasti sudah sembuh!' }
+};
+let bedMode = 'night', bedK = 0, bedGen = 0, bedCool = 0, stormT = 3, careSave = 0, musDuck = false;
+const DOOR = { x: 1.6, z: 2.7 }, SITE = { barn: new THREE.Vector3(1.5, 2.5, 1.2), coop: new THREE.Vector3(12, 1.9, 1.9) };
+const ZS = {}; const inside = { barn: 0, coop: 0 };
+function zSite(key, html) { let e = ZS[key]; if (!e) { e = ZS[key] = document.createElement('div'); e.className = 'zz'; $('app').appendChild(e); } if (e.dataset.h !== html) { e.innerHTML = html; e.dataset.h = html; } return e; }
+function careToast(txt) { const t = $('careToast'); t.textContent = txt; t.hidden = false; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); setTimeout(() => { t.hidden = true; }, 6500); }
+
+function pickMode() {
+  const p = plState();
+  if (p.mode === 'acak') { if (!p.cur) { p.cur = pick(['night', 'storm', 'sick']); save(); } return p.cur; }
+  return p.mode;
+}
+function beginBed(instant) {
+  if (bedOn) return;
+  bedOn = true; bedMode = pickMode(); bedGen++; const gen = bedGen; stormT = 2.5; inside.barn = inside.coop = 0;
+  try { if (T) endTask(); } catch (e) { /* ignore */ }
+  try { exitFarm(); setHL([]); hideBubble(); hideChoices(); } catch (e) { /* ignore */ }
+  PL.joy = false; stopSpeech(); focus(FOC.overview);
+  const app = $('app'); ['night', 'storm', 'sick'].forEach(m => app.classList.remove('bed-' + m)); app.classList.add('bedtime', 'bed-' + bedMode);
+  const B = BED[bedMode]; $('bedIcon').textContent = B.icon; $('bedTxt').textContent = B.txt(); $('bed').hidden = false;
+  if (instant) bedK = 1;
+  const sleepers = bedMode === 'sick' ? [ELD.k, ELD.n] : [ELD.k, ELD.n, PL];
+  const into = (e, i) => {
+    const go = () => {
+      if (gen !== bedGen) return;
+      if (instant) { e.g.visible = false; inside.barn++; return; }
+      elderGo(e, DOOR.x + (i - 1) * .35, DOOR.z, () => { if (gen !== bedGen) return; e.g.visible = false; inside.barn++; e.g.rotation.y = 0; });
+    };
+    if (instant || i === 0) go(); else setTimeout(go, i * 700);
+  };
+  sleepers.forEach(into);
+  if (bedMode === 'sick') { if (instant) PL.g.position.set(3.4, 0, 2.9); else { setTimeout(() => { if (gen === bedGen) elderGo(PL, 3.4, 2.9, () => { PL.g.rotation.y = -Math.PI / 2.4; }); }, 400); } }
+  if (bedMode !== 'sick') HENS.forEach((h, i) => {
+    if (!h.g.visible) return;
+    const go = () => {
+      if (gen !== bedGen) return;
+      if (instant) { h.g.position.set(11.2 + i * .45, 0, 2.9); h.sleep = true; inside.coop++; return; }
+      h.busy = true; h.tx = 11.2 + i * .45; h.tz = 2.9; h.cb = () => { if (gen !== bedGen) return; h.sleep = true; h.busy = false; inside.coop++; };
+    };
+    if (instant) go(); else setTimeout(go, 500 + i * 450);
+  });
+  const sayIt = () => { if (gen === bedGen && S.vo) say(B.txt(), B.who); };
+  setTimeout(sayIt, instant ? 600 : 1200);
+  if (bedMode === 'night') cue(SFX.soft);
+  if (bedMode === 'storm') cue(SFX.thunder);
+}
+function endBed() {
+  if (!bedOn) return;
+  bedOn = false; bedGen++; $('app').classList.remove('bedtime'); $('bed').hidden = true; stopSpeech(); rainOn(false);
+  [ELD.k, ELD.n].forEach((e, i) => { if (!e.g.visible) { e.g.visible = true; e.g.position.set(DOOR.x + i * .5, 0, DOOR.z); } });
+  elderGo(ELD.k, 8.1, 3.2); elderGo(ELD.n, 9.1, 6.2);
+  if (!PL.g.visible) { PL.g.visible = true; PL.g.position.set(DOOR.x + 1, 0, DOOR.z); }
+  plGo(HUB.x, HUB.z);
+  HENS.forEach(h => { if (h.sleep) { h.sleep = false; h.busy = false; h.tx = null; h.head.rotation.x = 0; h.g.position.y = 0; h.wait = 1; } });
+  inside.barn = inside.coop = 0; cue(SFX.rooster); cue(SFX.good);
+  S.pl.cur = ''; save(); S.pl.warned = leftSec() > 60 ? false : true;
+}
+/* parent changed something: wake everyone up if there is time again */
+function careApply() { if (bedOn && leftSec() > 0) endBed(); }
+
+/* ----- per-frame ----- */
+const rc = $('rain'), rx = rc.getContext('2d'), DROPS = [];
+function rainDraw(dt, k) {
+  const w = innerWidth, h = innerHeight; if (rc.width !== w || rc.height !== h) { rc.width = w; rc.height = h; }
+  rx.clearRect(0, 0, w, h); if (k <= .02 || bedMode !== 'storm') return;
+  while (DROPS.length < 150) DROPS.push({ x: Math.random() * (w + 200), y: Math.random() * h, l: 14 + Math.random() * 16, v: 700 + Math.random() * 400 });
+  rx.strokeStyle = 'rgba(215,232,255,' + (.6 * k).toFixed(2) + ')'; rx.lineWidth = 2; rx.lineCap = 'round'; rx.beginPath();
+  DROPS.forEach(d => { d.y += d.v * dt; d.x -= d.v * dt * .22; if (d.y > h) { d.y = -20; d.x = Math.random() * (w + 200); } if (d.x < -20) d.x += w + 200; rx.moveTo(d.x, d.y); rx.lineTo(d.x + d.l * .22, d.y - d.l); });
+  rx.stroke();
+}
+let rainNode = null;
+function rainOn(on) {
+  const a = AC; if (!a) return; if (on && !S.snd) on = false;
+  if (on && !rainNode && a.state === 'running') {
+    const len = a.sampleRate * 2, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = a.createBufferSource(); src.buffer = buf; src.loop = true; const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1700; const g = a.createGain(); g.gain.setValueAtTime(0, a.currentTime); g.gain.linearRampToValueAtTime(.07, a.currentTime + 2);
+    src.connect(f); f.connect(g); g.connect(a.destination); src.start(); rainNode = { src, g };
+  } else if (!on && rainNode) { const n = rainNode; rainNode = null; try { n.g.gain.cancelScheduledValues(a.currentTime); n.g.gain.setValueAtTime(n.g.gain.value, a.currentTime); n.g.gain.linearRampToValueAtTime(0, a.currentTime + 1); n.src.stop(a.currentTime + 1.1); } catch (e) { /* ignore */ } }
+}
+function flashNow(big) {
+  const f = $('flash'); f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 120);
+  if (big) { setTimeout(() => f.classList.add('on'), 220); setTimeout(() => f.classList.remove('on'), 330); }
+  setTimeout(() => cue(SFX.thunder), 350 + Math.random() * 500);
+}
+function bedStep(dt) {
+  bedK = clamp(bedK + (bedOn ? dt : -dt) / 2.4, 0, 1); const k = bedK * bedK * (3 - 2 * bedK), B = BED[bedMode];
+  HEMI.intensity = lerp(.88, B.hi, k); HEMI.color.copy(HEMI_C).lerp(cTmp.set(B.hc), k);
+  sun.intensity = lerp(.78, B.si, k); sun.color.copy(SUN_C).lerp(cTmp2.set(B.sc), k);
+  if (bedK === 0 && !bedOn) { $('app').classList.remove('bed-night', 'bed-storm', 'bed-sick'); }
+  if (bedMode === 'storm') { rainDraw(dt, k); rainOn(bedOn); if (bedOn) { stormT -= dt; if (stormT <= 0) { stormT = 4 + Math.random() * 5; flashNow(Math.random() < .5); } } } else { rainDraw(dt, 0); }
+  /* little floating signs above the barn / coop while someone is inside */
+  const sick = bedMode === 'sick';
+  const bz = zSite('barn', sick ? '<b>🤒</b><b class="d1">🤧</b>' : bedMode === 'storm' ? '<b>🏠</b>' : '<i>z</i><i class="d1">Z</i><i class="d2">z</i>');
+  const show = bedOn && inside.barn > 0, sb = screenOf(SITE.barn); bz.style.display = show ? '' : 'none'; bz.style.left = sb.x + 'px'; bz.style.top = sb.y + 'px';
+  const cz = zSite('coop', '<i>z</i><i class="d1">Z</i><i class="d2">z</i>'), sc = screenOf(SITE.coop); cz.style.display = bedOn && inside.coop > 0 ? '' : 'none'; cz.style.left = sc.x + 'px'; cz.style.top = sc.y + 'px';
+  if (AC && musBus && musDuck !== bedOn) { musDuck = bedOn; try { musBus.gain.setTargetAtTime(bedOn ? .18 : .55, AC.currentTime, .8); } catch (e) { /* ignore */ } }
+}
+function careTick(dt) {
+  const p = plState(), active = started && !stOn && !touring;
+  if (active && !paused && !bedOn && dt > 0 && !document.hidden) { p.used += dt; careSave += dt; if (careSave > 10) { careSave = 0; save(); } }
+  if (active && !bedOn && p.lim > 0) {
+    const left = leftSec();
+    if (left <= 0) beginBed(false);
+    else if (left <= 60 && !p.warned) { p.warned = true; save(); careToast('Sebentar lagi waktunya istirahat ya 🌙'); if (S.vo) say('Sebentar lagi waktunya istirahat ya!', 'n'); }
+  }
+  if (bedOn || bedK > 0) bedStep(dt);
+}
+/* tapping the sleeping farm: a small reaction */
+$('bed').addEventListener('pointerdown', e => {
+  if (e.target.closest('button')) return; ac();
+  if (bedMode === 'storm') { flashNow(true); return; }
+  SFX.soft(); const s = document.createElement('div'); s.className = 'tw'; s.textContent = bedMode === 'sick' ? '💤' : '✨'; s.style.left = e.clientX + 'px'; s.style.top = e.clientY + 'px'; $('app').appendChild(s); setTimeout(() => s.remove(), 1100);
+});
+
+/* ----- parent gate + panel ----- */
+let gateA = 0, gateBack = null;
+function openGate(back) {
+  gateBack = back || null; const a = rand(6, 9), b = rand(12, 19); gateA = a * b; $('gateQ').textContent = `Untuk orang tua: ${a} × ${b} = ?`; $('gateIn').value = ''; $('gate').hidden = false; $('gateCard').classList.remove('bad'); setTimeout(() => { try { $('gateIn').focus(); } catch (e) { /* ignore */ } }, 80);
+}
+function gateOk() {
+  if (+$('gateIn').value === gateA) { $('gate').hidden = true; openParent(); }
+  else { const c = $('gateCard'); c.classList.remove('bad'); void c.offsetWidth; c.classList.add('bad'); SFX.soft(); openGate(gateBack); }
+}
+$('gateGo').addEventListener('click', gateOk);
+$('gateIn').addEventListener('keydown', e => { if (e.key === 'Enter') gateOk(); });
+$('gateNo').addEventListener('click', () => { $('gate').hidden = true; });
+const CM = [['night', '🌙', 'Malam'], ['storm', '⛈️', 'Badai'], ['sick', '🤒', 'Sakit'], ['acak', '🎲', 'Acak']];
+function parentRefresh() {
+  const p = plState();
+  $('pLim').value = p.lim; $('pLimTxt').textContent = p.lim ? p.lim + ' menit' : 'Tanpa batas';
+  const used = fmtMin(p.used), left = leftSec();
+  $('pUse').textContent = p.lim ? `Hari ini sudah main ${used}. ` + (left > 0 ? `Sisa ${fmtMin(left + 59)}.` : 'Waktu hari ini habis.') + (p.bonus ? ` (tambahan ${p.bonus} menit)` : '') : `Hari ini sudah main ${used}.`;
+  $('pModes').querySelectorAll('.opt').forEach(b => b.classList.toggle('on', b.dataset.m === p.mode));
+}
+function openParent() { parentRefresh(); $('parent').hidden = false; }
+function closeParent() { $('parent').hidden = true; careApply(); if (paused) $('menu').hidden = false; }
+$('pModes').innerHTML = CM.map(m => `<button class="opt" data-m="${m[0]}"><span>${m[1]}</span>${m[2]}</button>`).join('');
+$('pModes').addEventListener('click', e => { const b = e.target.closest('.opt'); if (!b) return; SFX.pop(2); plState().mode = b.dataset.m; plState().cur = ''; save(); parentRefresh(); });
+$('pLim').addEventListener('input', () => { const p = plState(); p.lim = +$('pLim').value; p.warned = false; save(); parentRefresh(); });
+$('pPlus10').addEventListener('click', () => { SFX.good(); plState().bonus += 10; plState().warned = false; save(); parentRefresh(); careApply(); });
+$('pPlus30').addEventListener('click', () => { SFX.good(); plState().bonus += 30; plState().warned = false; save(); parentRefresh(); careApply(); });
+$('pReset').addEventListener('click', () => { SFX.soft(); const p = plState(); p.used = 0; p.bonus = 0; p.warned = false; save(); parentRefresh(); careApply(); });
+$('pPreview').addEventListener('click', () => { $('parent').hidden = true; if (paused) setPaused(false); beginBed(false); });
+$('pClose').addEventListener('click', closeParent);
+$('mParent').addEventListener('click', () => { $('menu').hidden = true; openGate(); });
+$('bedBtn').addEventListener('click', () => openGate());
+$('gateNo').addEventListener('click', () => { if (paused) $('menu').hidden = false; });
+
+(function stars() { const f = $('skyfx'); for (let i = 0; i < 26; i++) { const e = document.createElement('i'); e.className = 'star'; e.style.left = (Math.abs(Math.sin(i * 12.9)) * 96 + 2) + '%'; e.style.top = (Math.abs(Math.cos(i * 7.3)) * 55 + 2) + '%'; e.style.animationDelay = (i % 7) * .35 + 's'; f.appendChild(e); } })();
+
 /* ---------- boot ---------- */
 for (let k = 0; k < S.unl.plots; k++) { buildPlot(k); restorePlot(k); }
 if (S.unl.coop) coopG.visible = true;
@@ -2106,6 +2463,8 @@ window.__farm = {
   picksNow: () => allPicks().map(m => { const p = screenOf(worldOf(m)); return { d: m.userData, x: p.x, y: p.y }; }),
   cellXY: (k, i) => { const c = P[k].cells[i]; return screenOf(new THREE.Vector3(c.x, .3, c.z)); },
   PLpos: () => PL.g.position,
+  care: { beginBed, endBed, leftSec, get on() { return bedOn; } },
+  op: t => { if (!opOn) openOpening(); stT = t; },
   setState: o => { Object.assign(S, o); save(); refreshOffers(); updateHud(); }
 };
 

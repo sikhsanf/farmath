@@ -1,5 +1,8 @@
 <div id="app">
+  <div id="skyfx"><i class="moon"></i></div>
   <canvas id="c"></canvas>
+  <canvas id="rain"></canvas>
+  <div id="flash"></div>
 
   <div id="hud">
     <button id="btnPause" class="hbtn" aria-label="Jeda"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg></button>
@@ -31,6 +34,7 @@
 
   <div id="start" class="overlay" hidden>
     <h1 id="title" aria-label="Farmath"><span>F</span><span>a</span><span>r</span><span>m</span><span>a</span><span>t</span><span>h</span></h1>
+    <button id="opSkip" aria-label="Lewati">Lewati ▶▶</button>
     <p id="sub">Kebun hitung-hitungan</p>
     <button id="btnPlay" aria-label="Main"><i></i></button>
   </div>
@@ -44,7 +48,44 @@
       <button id="mMusic" class="mbtn">Musik: nyala</button>
       <button id="mAv" class="mbtn">Ganti karakter</button>
       <button id="mStory" class="mbtn">Putar cerita</button>
+      <button id="mParent" class="mbtn">🔒 Orang tua</button>
       <button id="mReset" class="mbtn warn">Hapus karakter</button>
+    </div>
+  </div>
+
+  <div id="careToast" hidden></div>
+
+  <div id="bed" hidden>
+    <div id="bedCard"><div id="bedIcon"></div><div id="bedTxt"></div></div>
+    <button id="bedBtn">🔒 Orang tua</button>
+  </div>
+
+  <div id="gate" class="overlay" hidden>
+    <div class="card" id="gateCard">
+      <h2>🔒 Orang tua</h2>
+      <p id="gateQ"></p>
+      <input id="gateIn" type="number" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Jawaban">
+      <div class="gateBtns"><button id="gateNo" class="mbtn">Batal</button><button id="gateGo" class="mbtn go">Buka</button></div>
+    </div>
+  </div>
+
+  <div id="parent" class="overlay" hidden>
+    <div class="card" id="parentCard">
+      <h2>Pengaturan orang tua</h2>
+      <div class="pCol">
+        <div class="pRow"><label for="pLim">Batas main per hari</label><b id="pLimTxt"></b></div>
+        <input id="pLim" type="range" min="0" max="120" step="5" value="0">
+        <div class="pHint" id="pUse"></div>
+        <div class="pRow"><label>Kalau waktu habis</label></div>
+        <div class="cuRow" id="pModes"></div>
+      </div>
+      <div class="pCol">
+        <div class="pRow"><label>Tambah waktu hari ini</label></div>
+        <div class="gateBtns"><button id="pPlus10" class="mbtn">+10 menit</button><button id="pPlus30" class="mbtn">+30 menit</button></div>
+        <button id="pReset" class="mbtn">Atur ulang waktu hari ini</button>
+        <button id="pPreview" class="mbtn">Lihat adegan waktu habis</button>
+        <button id="pClose" class="mbtn go">Selesai</button>
+      </div>
     </div>
   </div>
 

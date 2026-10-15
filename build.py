@@ -11,7 +11,7 @@ rd = lambda p: open(os.path.join(R, p), encoding='utf-8').read()
 three = rd('node_modules/three/build/three.min.js')
 css = rd('src/style.css')
 body = rd('src/body.html')
-game = '\n'.join(rd('src/' + f) for f in ('p1_core.js', 'p2_world.js', 'p3_game.js', 'p4_intro.js', 'p5_boot.js'))
+game = '\n'.join(rd('src/' + f) for f in ('p1_core.js', 'p2_world.js', 'p3_game.js', 'p4_intro.js', 'p4b_care.js', 'p5_boot.js'))
 game = '(function(){\n"use strict";\n' + game + '\n})();'
 
 FONT = '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">'
