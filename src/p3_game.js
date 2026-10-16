@@ -175,28 +175,9 @@ function lockFor(o) {
   V(g, 0x8f5d2a, .12, .95, .12, sx, 0, sz, false); V(g, 0xc99a5b, .85, .55, .1, sx, .75, sz, false); V(g, 0xffd34d, .36, .36, .12, sx, .85, sz + .06, false); V(g, 0xffec99, .16, .16, .14, sx, .92, sz + .08, false);
   g.visible = false; return (LOCKS[o.id] = g);
 }
-/* land that is not bought yet: a big fenced, weedy lot with a padlock sign. It is visible but unusable until it is opened. */
-const LOTS = [];
-function lotFor(k) {
-  if (LOTS[k]) return LOTS[k];
-  const g = new THREE.Group(); g.position.set(4.5, 0, PZ[k] + 1); scene.add(g);
-  V(g, 0xb8a679, 6.4, .06, 3.2, 0, 0, 0, false); V(g, 0xa69463, 5.6, .03, 2.4, 0, .06, 0, false);
-  const post = (x, z) => V(g, 0x8f5d2a, .14, .62, .14, x, 0, z, false);
-  for (let i = 0; i <= 8; i++) { const x = -3.1 + i * .775; post(x, -1.55); post(x, 1.55); }
-  for (let i = 1; i < 4; i++) { const z = -1.55 + i * .775; post(-3.1, z); post(3.1, z); }
-  [[0, -1.55, 6.3, .07], [0, 1.55, 6.3, .07]].forEach(r => V(g, 0xc99a5b, r[2], .08, r[3], r[0], .42, r[1], false));
-  V(g, 0xc99a5b, .07, .08, 3.1, -3.1, .42, 0, false); V(g, 0xc99a5b, .07, .08, 3.1, 3.1, .42, 0, false);
-  for (let i = 0; i < 16; i++) { const x = -2.6 + ((i * 37) % 53) / 10, z = -1 + ((i * 29) % 21) / 10; V(g, i % 3 ? 0x6f9a4a : 0x8cb35e, .12, .22 + (i % 4) * .06, .12, x, .06, z, false); }
-  V(g, 0x9a9a9a, .5, .3, .4, 1.6, .06, .2, false); V(g, 0x8a8a8a, .3, .2, .3, 1.95, .06, -.1, false);
-  const sx = -2.5, sz = 1.2;
-  V(g, 0x8f5d2a, .14, 1.2, .14, sx, 0, sz, false); V(g, 0xc99a5b, 1.1, .6, .1, sx, .85, sz, false);
-  V(g, 0xffd34d, .46, .34, .12, sx, .98, sz + .07, false); V(g, 0xffd34d, .08, .26, .12, sx - .14, 1.3, sz + .07, false); V(g, 0xffd34d, .08, .26, .12, sx + .14, 1.3, sz + .07, false); V(g, 0xffd34d, .36, .08, .12, sx, 1.5, sz + .07, false); V(g, 0x8f5d2a, .1, .14, .14, sx, 1.08, sz + .14, false);
-  g.visible = false; return (LOTS[k] = g);
-}
 function refreshOffers() {
-  for (let k = 1; k < 4; k++) { const lot = lotFor(k), mine = S.bld && S.bld.id === 'plot' && k === S.unl.plots, buyable = k === S.unl.plots && ofrById('plot').ghost.g.visible; lot.visible = k >= S.unl.plots && !mine && !buyable; }
   OFR.forEach(o => {
-    if (o.id === 'hen' || o.id === 'plot') return;
+    if (o.id === 'hen') return;
     const built = o.id === 'plot' ? S.unl.plots >= 4 : S.unl[o.id], lk = lockFor(o);
     lk.visible = !built && !o.ghost.g.visible && !(S.bld && S.bld.id === o.id); if (lk.visible) { const q = o.pos(); lk.position.set(q.x, 0, q.z); }
   });
@@ -917,7 +898,6 @@ const FIXED_B = [rectB(1.5, 1.2, 1.4, 1.2), rectB(11.6, 7.1, 1.5, 1.1)].concat([
 const blockers = () => {
   const b = FIXED_B.slice();
   for (let k = 0; k < S.unl.plots; k++) b.push({ x0: 1.7, x1: 7.3, z0: PZ[k] - .2, z1: PZ[k] + 2.2 });
-  for (let k = S.unl.plots; k < 4; k++) b.push({ x0: 1.4, x1: 7.6, z0: PZ[k] - .6, z1: PZ[k] + 2.6 });
   if (S.unl.coop) b.push({ x0: 9.9, x1: 14.1, z0: .8, z1: 5 });
   if (S.unl.kios) b.push({ x0: 9.9, x1: 14.1, z0: 8.4, z1: 10.4 });
   return b;
