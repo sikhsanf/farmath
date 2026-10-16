@@ -45,6 +45,7 @@ function updateHud() {
   if (S.eggs) inv.push('🥚' + S.eggs);
   $('prog').textContent = inv.length ? inv.join(' ') : '🧺 0';
   $('wave').style.display = S.snd ? '' : 'none';
+  $('btnJoy').classList.toggle('on', !!S.jy);
   $('mSound').textContent = 'Efek suara: ' + (S.snd ? 'nyala' : 'mati');
   $('mVoice').textContent = 'Suara pemandu: ' + (S.vo ? 'nyala' : 'mati');
   $('mMusic').textContent = 'Musik: ' + (S.mus ? 'nyala' : 'mati');
@@ -151,16 +152,16 @@ const hungry = () => S.hens > 0 && Date.now() >= S.hungryAt;
 /* things the player can make or buy; each has a ghost in the world */
 const OFR = [
   { id: 'plot', who: 'k', verb: 'bikin', label: 'petak tanah baru', ghost: makeGhost('plot', 5.6, 2.5, .6),
-    price: () => 6 + 2 * (S.unl.plots - 1), avail: () => S.unl.plots < 4 && plotFull(S.unl.plots - 1),
+    price: () => 6 + 2 * (S.unl.plots - 1), avail: () => S.tut >= TUT_N && S.unl.plots < 4 && plotFull(S.unl.plots - 1),
     pos: () => ({ x: 4.5, z: PZ[Math.min(3, S.unl.plots)] + 1 }), pl: () => ({ x: 7.9, z: PZ[Math.min(3, S.unl.plots)] + 2.7 }), focus: () => FOC.plot(Math.min(3, S.unl.plots)) },
   { id: 'coop', who: 'k', verb: 'bikin', label: 'kandang ayam', ghost: makeGhost('coop', 4, 4, 1.2),
-    price: () => 12, avail: () => !S.unl.coop && S.unl.plots >= 2,
+    price: () => S.tut === 4 ? 4 : 12, avail: () => !S.unl.coop && (S.tut === 4 || (S.tut >= TUT_N && S.unl.plots >= 2)),
     pos: () => ({ x: 12, z: 3 }), pl: () => ({ x: 10.3, z: 5.5 }), focus: () => FOC.coop },
   { id: 'hen', who: 'n', verb: 'beli', label: 'ayam', ghost: makeGhost('hen', .9, .9, .8),
-    price: () => 5, avail: () => S.unl.coop && S.hens < 3,
+    price: () => S.tut === 5 ? 3 : 5, avail: () => S.unl.coop && S.hens < 3 && (S.tut === 5 || S.tut >= TUT_N),
     pos: () => ({ x: 10.9 + S.hens * 1.2, z: 3.2 + (S.hens % 2) * .4 }), pl: () => ({ x: 10.3, z: 5.5 }), focus: () => FOC.coop },
   { id: 'kios', who: 'k', verb: 'bikin', label: 'kios', ghost: makeGhost('kios', 4.2, 1.6, 2.3),
-    price: () => 14, avail: () => S.unl.coop && S.hens >= 1 && !S.unl.kios,
+    price: () => S.tut === 7 ? 5 : 14, avail: () => S.unl.coop && S.hens >= 1 && !S.unl.kios && (S.tut === 7 || S.tut >= TUT_N),
     pos: () => ({ x: 12, z: 9.4 }), pl: () => ({ x: 8.3, z: 11.4 }), focus: () => FOC.kios }
 ];
 const ofrById = id => OFR.find(o => o.id === id);
@@ -196,7 +197,7 @@ function tip(who, text, dur) {
 }
 function tipEnd() { hideBubble(); notifO = null; setHL([]); focus(FM != null ? FOC.plot(FM) : FOC.overview); }
 function checkNotif() {
-  if (T || tipT > 0 || FM != null) return;
+  if (T || tipT > 0 || FM != null || cropPick) return;
   for (const o of OFR) {
     if (!o.ghost.g.visible) continue;
     const key = o.id + ':' + S.unl.plots + ':' + S.hens;
@@ -248,7 +249,8 @@ function finishBuild() {
   else if (b.id === 'coop') { S.unl.coop = true; coopG.visible = true; dropIn(coopG); }
   else { S.unl.kios = true; kiosG.visible = true; dropIn(kiosG); }
   save(); refreshOffers(); SFX.good(); burst(fx, CONF, 30, 5, .17, 1.3); ELD.k.cheer = 1.6; ELD.k.tx = null; ELD.k.armR.rotation.x = 0;
-  if (!T) { focus(b.id === 'plot' ? FOC.plot(S.unl.plots - 1) : o.focus()); tip('k', `Selesai! ${cap(o.label)} sudah jadi.`, 3.5); }
+  const tutAdv = b.id === 'coop' && S.tut === 4 ? 5 : b.id === 'kios' && S.tut === 7 ? 8 : 0;
+  if (!T) { focus(b.id === 'plot' ? FOC.plot(S.unl.plots - 1) : o.focus()); if (tutAdv) advTut(tutAdv); else tip('k', `Selesai! ${cap(o.label)} sudah jadi.`, 3.5); } else if (tutAdv) advTut(tutAdv);
 }
 function dropIn(g, cb) {
   g.position.y = 6;
@@ -274,6 +276,7 @@ function endTask() {
   hideChoices(); hideBubble(); T = null; if (t.type !== 'pay') S.done++; save(); updateHud(); refreshOffers();
   if (FM != null && (t.type === 'plant' || t.type === 'water' || t.type === 'harvest')) focus(FOC.plot(FM)); else { focus(FOC.overview); plGo(HUB.x, HUB.z); }
   if (t.type === 'plant' && S.tut === 0) advTut(1); else if (t.type === 'water' && S.tut === 1) advTut(2); else if (t.type === 'harvest' && S.tut === 3) advTut(4);
+  else if (t.type === 'pay' && t.id === 'hen' && S.tut === 5) advTut(6); else if (t.type === 'feed' && S.tut === 6) advTut(7); else if (t.type === 'sell' && S.tut === 8) advTut(9);
 }
 const kakekBusy = () => { if (!S.bld) return false; tip('k', `Kakek lagi bikin ${ofrById(S.bld.id).label}. Tunggu ya.`); return true; };
 
@@ -323,7 +326,7 @@ let lastCrop = -1;
 TK.plant = {
   start() {
     const sp = S.plots[T.plot], p = P[T.plot];
-    if (sp.cs.every(v => v === 0)) { sp.c = pick([0, 1, 2, 3].filter(c => c !== lastCrop)); lastCrop = sp.c; }
+    if (sp.cs.every(v => v === 0)) { sp.c = T.crop != null ? T.crop : pick(availCrops().filter(c => c !== lastCrop)); lastCrop = sp.c; }
     T.cn = CROPS[sp.c].name; T.fx = new THREE.Vector3(4.5, 1.2, p.zs + 1); T.who = 'k';
     elderGo(ELD.k, 8.4, p.zs - .6); plGo(7.9, p.zs + 2.7); focus(FOC.plot(T.plot));
     header('k', `Ayo tanam ${NUM[T.n]} bibit ${T.cn}!`, T.n, dotsOf(T.n, 'n'));
@@ -541,9 +544,21 @@ function ask() {
 }
 
 /* ---------- hub: the child decides what to do by tapping the farm ---------- */
+/* which crops can be planted: 3 at first, the 4th comes with the second plot of land */
+const availCrops = () => S.unl.plots >= 2 ? [0, 1, 2, 3] : [0, 1, 2];
+let cropPick = false;
+function closePick() { cropPick = false; tKey = ''; hideChoices(); hideBubble(); stopSpeech(); }
+function pickCrop(cb) {
+  cropPick = true; const q = 'Mau tanam apa? Pilih satu ya!'; showBubble('k', q); bnum.textContent = ''; setDots([]); say(q, 'k'); hideArrow();
+  choicesEl.innerHTML = '';
+  availCrops().forEach(c => { const b = document.createElement('button'); b.className = 'choice crop'; b.innerHTML = CROPS[c].e + '<small>' + CROPS[c].name + '</small>'; b.setAttribute('aria-label', CROPS[c].name); b.addEventListener('click', () => { ac(); SFX.pop(c); closePick(); cb(c); }); choicesEl.appendChild(b); });
+}
 function farmAct(k, kind) {
   if (T || kakekBusy()) return; const mx = maxN();
-  if (kind === 'plant' && cnt(k, 0)) startTask({ type: 'plant', plot: k, n: rand(1, Math.min(mx, cnt(k, 0))) });
+  if (kind === 'plant' && cnt(k, 0)) {
+    const go = c => startTask({ type: 'plant', plot: k, n: rand(1, Math.min(mx, cnt(k, 0))), crop: c });
+    if (S.plots[k].cs.every(v => v === 0)) pickCrop(go); else go(null);
+  }
   else if (kind === 'water' && cnt(k, 1)) startTask({ type: 'water', plot: k, n: Math.min(cnt(k, 1), mx) });
   else if (kind === 'harvest' && cnt(k, 3)) startTask({ type: 'harvest', plot: k, n: Math.min(cnt(k, 3), mx, 10) });
 }
@@ -562,7 +577,7 @@ const toolsEl = $('tools'); let tKey = '';
 toolsEl.innerHTML = '<div id="tooltxt"></div><div id="toolrow">' + [['plant', '🌱', 'Tanam'], ['water', '💧', 'Siram'], ['harvest', '🧺', 'Panen']].map(t => '<button class="tb" data-a="' + t[0] + '"><b class="bd"></b><span class="ti">' + t[1] + '</span><span class="tl">' + t[2] + '</span></button>').join('') + '<button class="tb tx" data-a="exit" aria-label="Selesai"><span class="ti">✕</span><span class="tl">Selesai</span></button></div>';
 toolsEl.addEventListener('click', e => { const b = e.target.closest('.tb'); if (!b) return; ac(); SFX.pop(2); if (b.dataset.a === 'exit') exitFarm(); else if (FM != null) farmAct(FM, b.dataset.a); });
 function toolsSync() {
-  const show = started && !paused && !touring && !stOn && FM != null && !T && $('tutend').hidden;
+  const show = started && !paused && !touring && !stOn && FM != null && !T && !cropPick && $('tutend').hidden;
   let key = '0'; if (show) key = '1:' + [0, 1, 2, 3].map(i => cnt(FM, i)).join(',');
   if (key === tKey) return; tKey = key; toolsEl.hidden = !show; if (!show) return;
   const c = [0, 1, 2, 3].map(i => cnt(FM, i)), cs = { plant: c[0], water: c[1], harvest: c[3] }, next = c[3] ? 'harvest' : c[1] ? 'water' : c[0] ? 'plant' : null;
@@ -607,25 +622,42 @@ function hubAlerts() {
   setHL(l);
 }
 let introDone = false, tutIdle = 0;
-/* ---------- tutorial: 4 small missions, then it is clearly over ---------- */
+/* ---------- tutorial: 9 small missions (farm, chickens, shop), then it is clearly over ---------- */
+const TUT_N = 9;
 const TUT = [
   { ic: '🌱', t: 'Misi 1: Tanam bibit. Tap tanah yang bersinar.' },
   { ic: '💧', t: 'Misi 2: Siram bibitnya. Tap yang bersinar.' },
   { ic: '⏳', t: 'Misi 3: Tunggu tumbuh. Tap tanamannya biar semangat!' },
-  { ic: '🧺', t: 'Misi 4: Panen! Geser jarimu di atas sayurnya.' }
+  { ic: '🧺', t: 'Misi 4: Panen! Tap sayurnya satu-satu.' },
+  { ic: '🏠', t: 'Misi 5: Bikin kandang ayam. Seret koinnya!' },
+  { ic: '🐔', t: 'Misi 6: Beli ayam. Seret koinnya!' },
+  { ic: '🌽', t: 'Misi 7: Ayam lapar! Tap karung jagungnya.' },
+  { ic: '🏪', t: 'Misi 8: Bikin kios. Seret koinnya!' },
+  { ic: '🛒', t: 'Misi 9: Layani pelanggan. Tap pelanggannya!' }
 ];
-const TUT_TIP = ['Ayo tanam bibit! Tap tanah yang bersinar.', 'Siram bibitnya ya! Tap yang bersinar.', 'Tap tanamannya biar semangat dan cepat tumbuh. Atau jalan-jalan pakai joystick!', 'Sayurnya sudah matang! Geser jarimu di atas sayurnya untuk panen.'];
+const TUT_TIP = ['Ayo tanam bibit! Tap tanah yang bersinar.', 'Siram bibitnya ya! Tap yang bersinar.', 'Tap tanamannya biar semangat dan cepat tumbuh.', 'Sayurnya sudah matang! Tap sayurnya satu-satu untuk panen.',
+  'Ayo bikin kandang ayam! Seret koinnya ke tempat yang bersinar.', 'Ayo beli ayam! Seret koinnya ke tempat yang bersinar.', 'Ayam lapar! Tap karung jagungnya.', 'Ayo bikin kios! Seret koinnya ke tempat yang bersinar.', 'Ada pelanggan! Tap pelanggannya ya.'];
 let mKey = '';
 function tutSync() {
-  const show = started && !touring && S.tut < 4, key = show ? 'm' + S.tut : '';
+  const show = started && !touring && S.tut < TUT_N, key = show ? 'm' + S.tut : '';
   if (key === mKey) return; mKey = key;
   const el = $('mission'); el.hidden = !show; if (!show) return;
   el.innerHTML = '<div class="msteps">' + TUT.map((s, i) => (i ? '<span class="msl"></span>' : '') + '<span class="ms ' + (i < S.tut ? 'ok' : i === S.tut ? 'on' : '') + '">' + (i < S.tut ? '✓' : s.ic) + '</span>').join('') + '</div><div class="mtxt">' + TUT[S.tut].t + '</div>';
 }
 function advTut(n) {
   S.tut = n; save(); tutIdle = 0; SFX.good();
-  if (n >= 4) { after(.7, showTutEnd); return; }
-  tip('k', ['', 'Bagus! Sekarang siram bibitnya.', 'Bagus! Sekarang tunggu tumbuh. Tap tanamannya biar semangat!', 'Sayurnya matang! Sekarang panen.'][n], 3.5);
+  if (n >= TUT_N) { after(.7, showTutEnd); return; }
+  const gift = { 4: 'coop', 5: 'hen', 7: 'kios' }[n], need = gift ? ofrById(gift).price() : 0, short = S.coins < need;
+  if (short) { S.coins = need; updateHud(); }
+  if (n === 8) custT = 1.5;
+  if (n === 6) { S.hungryAt = Date.now() + (FAST ? 1500 : 2500); lastHg = -1; }
+  const TXT = ['', 'Bagus! Sekarang siram bibitnya.', 'Bagus! Sekarang tunggu tumbuh. Tap tanamannya biar semangat!', 'Sayurnya matang! Sekarang panen.',
+    (short ? 'Ini koin dari Kakek! ' : '') + 'Sekarang kita bikin kandang ayam. Seret koinnya ke tempat yang bersinar.',
+    'Kandang sudah jadi! ' + (short ? 'Ini koin dari Nenek. ' : '') + 'Ayo beli ayam. Seret koinnya!',
+    'Ayamnya senang! Tapi sekarang ayam lapar. Tap karung jagungnya.',
+    'Ayam bertelur! ' + (short ? 'Ini koin dari Kakek. ' : '') + 'Sekarang bikin kios untuk jualan. Seret koinnya!',
+    'Kios sudah jadi! Sebentar lagi ada pelanggan. Tap pelanggannya ya.'];
+  tip(n >= 7 || n === 6 ? 'n' : 'k', TXT[n], 4);
 }
 function showTutEnd() {
   paused = true; stopSpeech(); $('tutend').hidden = false; SFX.good(); say('Hebat! Tutorial selesai! Sekarang kamu bisa bertani sendiri.', 'k');
@@ -636,7 +668,7 @@ function stepHub(dt) {
   if (T || touring) return;
   if (tipT > 0) { tipT -= dt; if (tipT <= 0) tipEnd(); }
   else { checkNotif(); hubAlerts(); }
-  if (S.tut < 4 && started) { tutIdle += dt; if (tutIdle > 10) { tutIdle = 0; tip('k', TUT_TIP[S.tut], 4); } }
+  if (S.tut < TUT_N && started && !cropPick) { tutIdle += dt; if (tutIdle > 10) { tutIdle = 0; tip(S.tut >= 6 && S.tut !== 7 ? 'n' : 'k', TUT_TIP[S.tut], 4); } }
   if (S.unl.kios && !CUST) { custT -= dt; if (custT <= 0) { custT = 3; spawnCust(); } }
 }
 
@@ -707,7 +739,7 @@ const BIRD = { g: new THREE.Group(), on: false, t: 12 };
   BIRD.wl = new THREE.Group(); BIRD.wr = new THREE.Group(); g.add(BIRD.wl, BIRD.wr); V(BIRD.wl, 0x3b3d5c, .26, .04, .6, 0, .1, -.3, false); V(BIRD.wr, 0x3b3d5c, .26, .04, .6, 0, .1, .3, false); g.visible = false; scene.add(g); }
 function stepBird(dt) {
   const b = BIRD;
-  if (!b.on) { b.t -= dt; if (b.t <= 0) { b.on = true; b.g.visible = true; b.g.position.set(-4, 5 + Math.random() * 2, rand(3, 13)); b.g.rotation.y = Math.PI / 2; SFX.soft(); } return; }
+  if (!b.on) { b.t -= dt; if (b.t <= 0) { b.on = true; b.g.visible = true; b.g.position.set(-4, 5 + Math.random() * 2, rand(3, 13)); b.g.rotation.y = 0; SFX.soft(); } return; }
   b.g.position.x += 3.4 * dt; b.g.position.y += Math.sin(tm * 2) * .004; const f = Math.sin(tm * 14) * .7; b.wl.rotation.x = f; b.wr.rotation.x = -f;
   if (b.g.position.x > 22) { b.on = false; b.g.visible = false; b.t = 25 + Math.random() * 20; }
 }
@@ -828,6 +860,7 @@ function trail(x, y) { const d = document.createElement('i'); d.className = 'tra
 canvas.addEventListener('pointerdown', e => {
   if (!started || paused || touring) return;
   ac(); tutIdle = 0;
+  if (cropPick) { closePick(); return; }
   const mk = markAt(e.clientX, e.clientY);
   if (mk) {
     if (!T) { const c = P[mk.k].cells[mk.i]; tapPlot(mk.k, { x: c.x, z: c.z }); }
@@ -870,7 +903,7 @@ const blockers = () => {
   return b;
 };
 function stepJoy(dt) {
-  const ok = started && !paused && !touring && !T && !stOn && FM == null;
+  const ok = started && !paused && !touring && !T && !stOn && FM == null && S.jy;
   if (joy.hidden === ok) { joy.hidden = !ok; if (!ok) joyEnd(); }
   if (!ok) return;
   const mag = Math.min(1, Math.hypot(jx, jy));
@@ -892,12 +925,15 @@ function fencePL() {
 
 /* ---------- menu, sound, start ---------- */
 const stopSpeech = () => { try { speechSynthesis.cancel(); } catch (e) { /* ignore */ } };
-function setPaused(p) { paused = p; $('menu').hidden = !p; if (p) stopSpeech(); }
+function setPaused(p) { paused = p; $('menu').hidden = !p; if (p) { stopSpeech(); pickVoice(); voiceLabel(); } }
 $('btnPause').addEventListener('click', () => setPaused(true));
 $('mResume').addEventListener('click', () => setPaused(false));
+$('btnJoy').addEventListener('click', () => { S.jy = !S.jy; save(); updateHud(); SFX.pop(S.jy ? 3 : 1); });
 $('btnSnd').addEventListener('click', () => { S.snd = !S.snd; save(); updateHud(); });
 $('mSound').addEventListener('click', () => { S.snd = !S.snd; save(); updateHud(); });
 $('mVoice').addEventListener('click', () => { S.vo = !S.vo; if (!S.vo) stopSpeech(); save(); updateHud(); if (S.vo) say('Halo! Aku Kakek.', 'k'); });
+const voiceLabel = () => { const n = voices.length, i = voice ? voices.indexOf(voice) : -1; $('mVoiceSel').textContent = n ? 'Ganti suara: ' + (i + 1) + ' dari ' + n + ' (' + String(voice.name).replace(/^(Microsoft|Google)\s+/i, '').slice(0, 16) + ')' : 'Suara bawaan perangkat'; };
+$('mVoiceSel').addEventListener('click', () => { if (voices.length > 1) { voice = voices[(voices.indexOf(voice) + 1) % voices.length]; S.vn = voice.name; save(); } voiceLabel(); const w = S.vo; S.vo = true; say('Halo! Aku Kakek. Ayo kita bertani bersama!', 'k'); S.vo = w; });
 $('mMusic').addEventListener('click', () => { S.mus = !S.mus; save(); updateHud(); });
 let resetArmed = false;
 $('mReset').addEventListener('click', () => {

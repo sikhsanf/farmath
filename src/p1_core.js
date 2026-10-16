@@ -17,14 +17,17 @@ const PRAISE = ['Hebat!', 'Pintar!', 'Mantap!', 'Keren!', 'Bagus sekali!'];
 /* ---------- save state ---------- */
 const KEY = 'farmath_v02';
 const DEF = () => ({
-  done: 0, coins: 0, inv: [0, 0, 0, 0], eggs: 0, snd: true, mus: true, hens: 0, bld: null, av: null, hungryAt: 0, look: null, nm: '', fm: '', story: false, tour: false, tutC: false, tutH: false, tut: 0, vo: true,
+  done: 0, coins: 0, inv: [0, 0, 0, 0], eggs: 0, snd: true, mus: true, hens: 0, bld: null, av: null, hungryAt: 0, look: null, nm: '', fm: '', story: false, tour: false, tutC: false, tutH: false, tut: 0, tutV: 2, jy: false, vn: '', vo: true,
   plots: [0, 1, 2, 3].map(() => ({ c: 0, cs: Array(10).fill(0), r: Array(10).fill(0) })),
   unl: { plots: 1, coop: false, kios: false }
 });
 function loadState() {
   try {
     const r = localStorage.getItem(KEY);
-    if (r) { const o = JSON.parse(r); if (o.tut === undefined) o.tut = (o.done > 0 || (o.unl && o.unl.plots > 1)) ? 4 : 0; return Object.assign(DEF(), o); }
+    if (r) { const o = JSON.parse(r); if (o.tut === undefined) o.tut = (o.done > 0 || (o.unl && o.unl.plots > 1)) ? 4 : 0;
+      /* tutorial v2 added the chicken + shop chapters: older saves that finished the farming part continue from where they are */
+      if (o.tutV !== 2) { o.tutV = 2; if (o.tut >= 4) { const u = o.unl || {}; o.tut = !u.coop ? 4 : !(o.hens > 0) ? 5 : !u.kios ? 7 : 9; } }
+      return Object.assign(DEF(), o); }
   } catch (e) { /* storage may be blocked */ }
   return DEF();
 }
@@ -69,8 +72,14 @@ const SFX = {
   rooster: () => { tone(520, .14, 'sawtooth', .07, 1.1); tone(700, .12, 'sawtooth', .07, 1, .17); tone(660, .1, 'sawtooth', .06, 1, .32); tone(900, .5, 'sawtooth', .07, .55, .44); }
 };
 let voice = null;
+let voices = [];
+/* the most natural-sounding Indonesian voice the device offers (neural / online / Google ones beat the old robotic defaults) */
 function pickVoice() {
-  try { voice = speechSynthesis.getVoices().find(v => /^id/i.test(v.lang)) || null; } catch (e) { voice = null; }
+  try {
+    const sc = v => (/natural|neural|online/i.test(v.name) ? 4 : 0) + (/google|microsoft|siri|premium|enhanced/i.test(v.name) ? 2 : 0) + (v.localService ? 0 : 1);
+    voices = speechSynthesis.getVoices().filter(v => /^id/i.test(v.lang) || /indones/i.test(v.name)).sort((a, b) => sc(b) - sc(a));
+    voice = voices.find(v => v.name === S.vn) || voices[0] || null;
+  } catch (e) { voice = null; }
 }
 try { if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; } } catch (e) { /* ignore */ }
 /* Guide voice. Browsers give no SSML, so expression is faked per phrase:
@@ -79,18 +88,17 @@ function say(text, who) {
   if (!S.vo || !window.speechSynthesis) return;
   try {
     speechSynthesis.cancel();
-    const base = who === 'n' ? 1.22 : .8, parts = String(text).match(/[^.!?,]+[.!?,]*/g) || [String(text)];
+    const base = who === 'n' ? 1.12 : .86, parts = String(text).match(/[^.!?,]+[.!?,]*/g) || [String(text)];
     parts.forEach((raw, i) => {
       const p = raw.trim(); if (!p) return;
       const end = p.slice(-1), u = new SpeechSynthesisUtterance(p.replace(/[.!?,]+$/, ''));
       u.lang = 'id-ID'; if (voice) u.voice = voice;
-      let pitch = base, rate = .86;
-      if (end === '!') { pitch += .2; rate = .95; }
-      else if (end === '?') { pitch += .26; rate = .88; }
-      else if (end === ',') { pitch += .06; rate = .88; }
-      else { pitch -= .04; rate = .82; }
-      if (i === 0 && parts.length > 1) pitch += .05;
-      if (p.length < 12) { pitch += .14; rate += .04; }
+      let pitch = base, rate = .92;
+      if (end === '!') { pitch += .1; rate = .98; }
+      else if (end === '?') { pitch += .14; rate = .92; }
+      else if (end === ',') { pitch += .03; rate = .92; }
+      else { pitch -= .03; rate = .9; }
+      if (p.length < 12) { pitch += .06; rate += .03; }
       u.pitch = Math.max(.1, Math.min(2, pitch)); u.rate = rate; u.volume = 1;
       speechSynthesis.speak(u);
     });

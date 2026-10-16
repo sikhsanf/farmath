@@ -81,7 +81,7 @@ ST_SCENES.push(g => {
   const rayG = new THREE.Group(); sunG.add(rayG);
   for (let i = 0; i < 8; i++) { const p = new THREE.Group(); p.rotation.z = i * Math.PI / 4; const r = new THREE.Mesh(new THREE.BoxGeometry(.16, 1, .1), new THREE.MeshBasicMaterial({ color: 0xfff2b0, transparent: true, opacity: .55 })); r.position.y = 1.55; p.add(r); rayG.add(p); }
   /* birds crossing the sky */
-  const birds = [0, 1, 2].map(i => { const b = new THREE.Group(), w1 = new THREE.Group(), w2 = new THREE.Group(); b.add(w1, w2); V(b, 0x3b3b4a, .2, .14, .3, 0, 0, 0, false); V(w1, 0x3b3b4a, .5, .04, .22, -.28, 0, 0, false); V(w2, 0x3b3b4a, .5, .04, .22, .28, 0, 0, false); far.add(b); return { b, w1, w2, i }; });
+  const birds = [0, 1, 2].map(i => { const b = new THREE.Group(), w1 = new THREE.Group(), w2 = new THREE.Group(); b.add(w1, w2); V(b, 0x3b3b4a, .2, .14, .3, 0, 0, 0, false); V(w1, 0x3b3b4a, .5, .04, .22, -.28, 0, 0, false); V(w2, 0x3b3b4a, .5, .04, .22, .28, 0, 0, false); b.rotation.y = Math.PI / 2; far.add(b); return { b, w1, w2, i }; });
   /* the field */
   V(g, 0x8a5a33, 5.8, .28, 3, -2, 0, .15, false);
   const crops = [], mounds = [];
@@ -269,11 +269,15 @@ function openCustom(back) {
   stPlat(stRoot, 9, 7); stTree(stRoot, -3.4, -2.2, .9); stFlowers(stRoot, 18, 8, 4);
   stUpd = (dt, t) => { if (cuKid) { cuKid.g.rotation.y = Math.sin(t * .9) * .6; cuKid.wave = 1; stepElder(cuKid, dt, t); } };
   stLook = [0, 1.7, 0]; stW = 6.4; stHh = 5.2; stOff = .3;
-  $('cust').hidden = false; cuRefresh();
+  $('cust').hidden = false; cuRefresh(); cuCheck();
 }
+/* the character name and the farm name are required */
+function cuCheck() { const ok = !!($('cuName').value.trim() && $('cuFarm').value.trim()); $('cuGo').classList.toggle('off', !ok); $('cuHint').textContent = ok ? 'Nama bisa diganti nanti lewat menu.' : 'Isi namamu dan nama kebunmu dulu ya.'; return ok; }
+['cuName', 'cuFarm'].forEach(id => $(id).addEventListener('input', cuCheck));
 $('cuGo').addEventListener('click', () => {
+  if (!cuCheck()) { SFX.soft(); const b = $(!$('cuName').value.trim() ? 'cuName' : 'cuFarm'); b.focus(); b.classList.remove('bad'); void b.offsetWidth; b.classList.add('bad'); return; }
   ac(); SFX.good();
-  S.look = { g: !!cuLook.g, h: cuLook.h, c: cuLook.c }; S.nm = $('cuName').value.trim() || 'Petani Cilik'; S.fm = $('cuFarm').value.trim() || 'Kebun Ceria'; save();
+  S.look = { g: !!cuLook.g, h: cuLook.h, c: cuLook.c }; S.nm = $('cuName').value.trim(); S.fm = $('cuFarm').value.trim(); save();
   $('cust').hidden = true; stOn = false; sceneUi(false); if (stRoot) { stScene.remove(stRoot); stRoot = null; } cuKid = null;
   buildPlayer(); updateHud(); const b = cuBack; cuBack = null; if (b) b();
 });

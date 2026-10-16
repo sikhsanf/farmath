@@ -10,7 +10,7 @@
       <div class="chip" id="chipC"><span class="coin"></span><span id="coinN">0</span></div>
       <div class="chip" id="prog" aria-label="Kemajuan"></div>
     </div>
-    <button id="btnSnd" class="hbtn" aria-label="Suara"><svg id="icoSnd" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path id="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#6d431b" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="hr"><button id="btnJoy" class="hbtn" aria-label="Joystick">🕹️</button><button id="btnSnd" class="hbtn" aria-label="Suara"><svg id="icoSnd" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path id="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#6d431b" stroke-width="2" stroke-linecap="round"/></svg></button></div>
   </div>
 
   <div id="bubble" hidden>
@@ -44,6 +44,7 @@
       <h2>Jeda</h2>
       <button id="mResume" class="mbtn go">Lanjut main</button>
       <button id="mVoice" class="mbtn">Suara pemandu: nyala</button>
+      <button id="mVoiceSel" class="mbtn">Ganti suara pemandu</button>
       <button id="mSound" class="mbtn">Efek suara: nyala</button>
       <button id="mMusic" class="mbtn">Musik: nyala</button>
       <button id="mAv" class="mbtn">Ganti karakter</button>
@@ -92,8 +93,8 @@
   <div id="tutend" class="overlay" hidden>
     <div class="card">
       <h2>🎉 Tutorial selesai!</h2>
-      <div class="skills"><span>🌱<br>Menanam</span><span>💧<br>Menyiram</span><span>🧺<br>Memanen</span></div>
-      <p>Sekarang kamu bisa bertani sendiri. Kumpulkan koin untuk bikin kandang ayam!</p>
+      <div class="skills"><span>🌱<br>Menanam</span><span>🧺<br>Memanen</span><span>🐔<br>Ayam</span><span>🛒<br>Jualan</span></div>
+      <p>Sekarang kamu bisa mengurus kebun sendiri. Kumpulkan koin untuk membuka lahan baru dan tanam sayur lain!</p>
       <button id="tutOk" class="mbtn go">Main sendiri</button>
     </div>
   </div>
@@ -107,9 +108,9 @@
       <div class="cuRow" id="cuHat"></div>
       <div class="cuLbl">Warna baju</div>
       <div class="cuRow" id="cuCol"></div>
-      <input id="cuName" maxlength="12" placeholder="Nama kamu" autocomplete="off">
-      <input id="cuFarm" maxlength="16" placeholder="Nama kebun" autocomplete="off">
-      <div class="cuHint">Nama bisa diganti nanti lewat menu.</div>
+      <input id="cuName" maxlength="12" placeholder="Nama kamu (wajib)" autocomplete="off">
+      <input id="cuFarm" maxlength="16" placeholder="Nama kebun (wajib)" autocomplete="off">
+      <div class="cuHint" id="cuHint">Isi namamu dan nama kebunmu dulu ya.</div>
       <button class="mbtn go" id="cuGo">Mulai!</button>
     </div>
   </div>

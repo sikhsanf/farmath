@@ -45,7 +45,10 @@ with sync_playwright() as p:
     for step, nm in [(0, 'plant'), (1, 'water')]:
         assert tut() == step, (tut(), step)
         cc = pg.evaluate("([k,i]) => __farm.cellXY(k,i)", [0, 0]); pg.mouse.click(cc['x'], cc['y'])
-        pg.wait_for_timeout(600); run_task(nm); pg.wait_for_timeout(800)
+        pg.wait_for_timeout(600)
+        if step == 0:
+            pg.screenshot(path=OUT + '_2pick.png'); print('crop options', pg.evaluate("document.querySelectorAll('.choice.crop').length")); pg.click('.choice.crop >> nth=1'); pg.wait_for_timeout(500)
+        run_task(nm); pg.wait_for_timeout(800)
         print('after', nm, 'tut=', tut())
         if step == 0: pg.screenshot(path=OUT + '_3mission2.png')
     pg.wait_for_timeout(3500)
@@ -58,6 +61,5 @@ with sync_playwright() as p:
     print('ready tut', tut()); pg.wait_for_timeout(4500)
     first = pg.evaluate("__farm.S.plots[0].cs.findIndex(v=>v===3)")
     click_cell(first); pg.wait_for_timeout(600); run_task('harvest'); pg.wait_for_timeout(1500)
-    print('final tut', tut()); pg.screenshot(path=OUT + '_6end.png')
-    pg.click('#tutOk'); pg.wait_for_timeout(500); pg.screenshot(path=OUT + '_7free.png')
+    print('final tut', tut(), 'coins', pg.evaluate('__farm.S.coins')); pg.screenshot(path=OUT + '_6end.png')
     print('ERR', errs[:5]); b.close()
