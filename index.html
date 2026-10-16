@@ -1388,34 +1388,26 @@ TK.water = {
   hint() { const i = T.cells.find(x => !T.got.has(x)); if (i == null) return null; const c = P[T.plot].cells[i]; return { pos: new THREE.Vector3(c.x, .9, c.z), text: 'Tap tanaman yang bersinar.' }; }
 };
 
-/* 3. HARVEST (Kakek): tap the crop, then tap the crate */
+/* 3. HARVEST (Kakek): tap each ripe crop, one tap per crop (no dragging) */
 function harvUi() {
-  const p = P[T.plot], tgt = T.cells.filter(i => !T.got.has(i));
-  picks = tgt.map(i => p.cells[i].hit).concat([p.crateHit]);
-  if (T.sel == null) setHL(tgt.map(i => cellPad(T.plot, i)));
-  else setHL([cellPad(T.plot, T.sel), { x: p.crate.position.x, z: p.crate.position.z, w: 2.0, d: 1.0, y: .02 }]);
+  const tgt = T.cells.filter(i => !T.got.has(i));
+  picks = tgt.map(i => P[T.plot].cells[i].hit); setHL(tgt.map(i => cellPad(T.plot, i)));
 }
 TK.harvest = {
   start() {
     const sp = S.plots[T.plot], p = P[T.plot]; T.cells = cellsIn(T.plot, 3).slice(0, T.n); T.got = new Set(); T.sel = null; T.cn = CROPS[sp.c].name; T.fx = new THREE.Vector3(6, 1.2, p.zs + 1.5); T.who = 'k';
     elderGo(ELD.k, 8.4, p.zs - .6); plGo(7.9, p.zs + 2.7); focus(FOC.plot(T.plot));
     trayClear(p.crate); p.crate.visible = true; popScale(p.crate, .2, .4);
-    header('k', `Panen ${NUM[T.n]} ${T.cn}! Geser jarimu di atas sayurnya.`, T.n, dotsOf(T.n, 'n'));
-    harvUi(); TK.harvest.demo(!S.swipeSeen); S.swipeSeen = true;
+    header('k', `Panen ${NUM[T.n]} ${T.cn}! Tap sayurnya satu-satu.`, T.n, dotsOf(T.n, 'n'));
+    harvUi(); TK.harvest.demo(true);
   },
   tap(d) {
-    const sp = S.plots[T.plot], p = P[T.plot];
     if (d.kind === 'cell' && d.plot === T.plot) {
       if (!T.cells.includes(d.i) || T.got.has(d.i)) { nudge('Tap yang bersinar ya.'); return; }
-      if (T.sel != null && p.cells[T.sel].parts) p.cells[T.sel].parts.grown.rotation.z = 0;
-      T.sel = d.i; wiggle(p.cells[d.i].parts.grown); SFX.pop(0); setText('Sekarang tap petinya!'); harvUi(); return;
-    }
-    if (d.kind === 'crate' && d.plot === T.plot) {
-      if (T.sel == null) { nudge('Geser jarimu di atas sayurnya ya.'); return; }
-      TK.harvest.take(T.sel);
+      TK.harvest.take(d.i);
     }
   },
-  /* one ready plant goes into the crate (by swipe, or tap plant + tap crate) */
+  /* one ready plant goes into the crate */
   take(i) {
     const sp = S.plots[T.plot], p = P[T.plot]; if (T.got.has(i) || !T.cells.includes(i)) return;
     T.got.add(i); if (T.sel === i) T.sel = null;
@@ -1430,18 +1422,13 @@ TK.harvest = {
   demo(on) {
     const t = T.cells.filter(i => !T.got.has(i)), p = P[T.plot]; if (!t.length) return;
     const w = i => new THREE.Vector3(p.cells[i].x, .5, p.cells[i].z);
-    if (on) after(.8, () => { if (T && T.type === 'harvest' && !T.locked && T.k === 0) { if (t.length > 1) showHandDrag(w(t[0]), w(t[t.length - 1])); else showHandTap(w(t[0])); } });
+    if (on) after(.8, () => { if (T && T.type === 'harvest' && !T.locked && T.k === 0) { showHandTap(w(t[0])); } });
   },
   cleanup() {
     const p = P[T.plot], items = p.crate.userData.items.slice();
     tween(.5, k => items.forEach(it => it && it.scale.setScalar(.5 * (1 - k))), () => { trayClear(p.crate); p.crate.visible = false; }, 0, EZ.lin);
   },
-  hint() {
-    const p = P[T.plot];
-    if (T.sel != null) { const w = worldOf(p.crateHit); return { pos: w.add(new THREE.Vector3(0, 1.0, 0)), text: 'Tap petinya.' }; }
-    const r = T.cells.filter(x => !T.got.has(x)); if (!r.length) return null; const q = i => new THREE.Vector3(p.cells[i].x, .5, p.cells[i].z);
-    return r.length > 1 ? { drag: [q(r[0]), q(r[r.length - 1])], text: 'Geser jarimu di atas sayurnya.' } : { pos: q(r[0]), text: 'Tap sayur yang bersinar.' };
-  }
+  hint() { const p = P[T.plot], r = T.cells.filter(x => !T.got.has(x)); if (!r.length) return null; return { pos: new THREE.Vector3(p.cells[r[0]].x, .5, p.cells[r[0]].z), text: 'Tap sayur yang bersinar.' }; }
 };
 
 /* 4. FEED (Nenek): number bond, 2 corn kernels per hen */
@@ -1695,7 +1682,7 @@ function stepPlots(dt) {
         }
       }
       if (st === 3 && sp_ && Math.random() < .4) sparkle(c);
-      const kind = st === 1 ? 'drop' : st === 3 ? 'star' : st === 0 && !T && started && !touring ? 'plus' : null;
+      const kind = st === 1 ? 'drop' : st === 3 ? 'star' : st === 0 && started && !touring && (!T || (T.type === 'plant' && T.plot === k)) ? 'plus' : null;
       if (kind || c.mk) {
         c.mk = c.mk || {};
         ['drop', 'star', 'plus'].forEach(kd => { const m = c.mk[kd]; if (m) m.visible = kd === kind; });
@@ -1771,9 +1758,13 @@ function updateChips() {
   });
   if (T && T.type === 'sell' && S.unl.kios) {
     const v = worldOf(vegHit), e = worldOf(eggHit), kc = Math.max(0, kiosCrop);
-    setChip('kv', v.add(new THREE.Vector3(0, 1.1, 0)), CROPS[kc].e + ' ' + S.inv[kc], '');
-    setChip('ke', e.add(new THREE.Vector3(0, 1.1, 0)), '🥚 ' + S.eggs, '');
+    setChip('kv', v.add(new THREE.Vector3(0, 1.1, 0)), CROPS[kc].e + ' ' + S.inv[kc], 'price tap');
+    setChip('ke', e.add(new THREE.Vector3(0, 1.1, 0)), '🥚 ' + S.eggs, 'price tap');
+    hookChip('kv', () => { if (T && T.type === 'sell' && !T.locked) { T.idle = 0; hideArrow(); TK.sell.tap({ kind: 'veg' }); } });
+    hookChip('ke', () => { if (T && T.type === 'sell' && !T.locked) { T.idle = 0; hideArrow(); TK.sell.tap({ kind: 'egg' }); } });
   } else { setChip('kv', null); setChip('ke', null); }
+  setChip('fk', T && T.type === 'feed' && !T.locked ? new THREE.Vector3(SACK.position.x, 1.9, SACK.position.z) : null, '🌽', 'price tap');
+  hookChip('fk', () => { if (T && T.type === 'feed' && !T.locked) { T.idle = 0; hideArrow(); TK.feed.tap({ kind: 'sack' }); } });
   setChip('farm', started && !T && !touring && S.fm ? new THREE.Vector3(1.5, 3.4, 1.2) : null, '🌱 ' + esc(S.fm), 'sign');
   const waiting = CUST && CUST.ready && !CUST.busy && !T;
   setChip('co', waiting ? worldOf(CUST.g).add(new THREE.Vector3(0, 2.2, 0)) : null, '🛒 Pelanggan', 'price tap');
@@ -1819,6 +1810,15 @@ let cluckT = 4;
 
 /* ---------- input ---------- */
 const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
+/* the floating signs over the soil (plus / drop / star) are tap targets too: a tap near one counts as a tap on its cell */
+function markAt(x, y) {
+  let best = null, bd = 46; const v = new THREE.Vector3();
+  for (let k = 0; k < S.unl.plots; k++) P[k].cells.forEach((c, i) => {
+    if (!c.mk) return;
+    ['drop', 'star', 'plus'].forEach(kd => { const m = c.mk[kd]; if (!m || !m.visible) return; m.getWorldPosition(v); const s = screenOf(v), d = Math.hypot(s.x - x, s.y - y); if (d < bd) { bd = d; best = { k, i }; } });
+  });
+  return best;
+}
 function allPicks() {
   const base = [ELD.k.hit, ELD.n.hit, PL.hit].concat(HENS.filter(h => h.g.visible).map(h => h.hit));
   if (T) return picks.concat(base);
@@ -1838,21 +1838,16 @@ function pickAt(cx, cy) {
   const hits = ray.intersectObjects(allPicks(), false);
   return hits.length ? Object.assign({ pt: hits[0].point }, hits[0].object.userData) : null;
 }
-let swipe = null;
 function trail(x, y) { const d = document.createElement('i'); d.className = 'trail'; d.style.left = x + 'px'; d.style.top = y + 'px'; $('app').appendChild(d); setTimeout(() => d.remove(), 450); }
-canvas.addEventListener('pointermove', e => {
-  if (!swipe || !T || T.locked || T.type !== 'harvest' || paused) return;
-  const x1 = e.clientX, y1 = e.clientY, dx = x1 - swipe.x, dy = y1 - swipe.y, n = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 12));
-  for (let s = 1; s <= n; s++) {
-    const d = pickAt(swipe.x + dx * s / n, swipe.y + dy * s / n);
-    if (d && d.kind === 'cell' && d.plot === T.plot && T.cells.includes(d.i) && !T.got.has(d.i)) { T.idle = 0; TK.harvest.take(d.i); if (!T || T.locked) break; }
-  }
-  swipe = { x: x1, y: y1 }; trail(x1, y1);
-});
-['pointerup', 'pointercancel', 'pointerleave'].forEach(n => canvas.addEventListener(n, () => { swipe = null; }));
 canvas.addEventListener('pointerdown', e => {
   if (!started || paused || touring) return;
-  ac(); tutIdle = 0; swipe = { x: e.clientX, y: e.clientY };
+  ac(); tutIdle = 0;
+  const mk = markAt(e.clientX, e.clientY);
+  if (mk) {
+    if (!T) { const c = P[mk.k].cells[mk.i]; tapPlot(mk.k, { x: c.x, z: c.z }); }
+    else if (!T.locked && T.plot === mk.k && (T.type === 'plant' || T.type === 'water' || T.type === 'harvest')) { T.idle = 0; hideArrow(); TK[T.type].tap({ kind: 'cell', plot: mk.k, i: mk.i }); }
+    return;
+  }
   const d = pickAt(e.clientX, e.clientY); if (!d) return;
   if (d.kind === 'hen') { ambientTap(d); if (T) T.idle = 0; else { exitFarm(); tryFeed(); } return; }
   if (d.kind === 'elder') { ambientTap(d); if (T) T.idle = 0; return; }
@@ -2462,6 +2457,7 @@ window.__farm = {
   get S() { return S; }, get T() { return T; }, get CUST() { return CUST; }, P, HENS, ELD, PL, camera, screenOf, worldOf, TK, OFR,
   picksNow: () => allPicks().map(m => { const p = screenOf(worldOf(m)); return { d: m.userData, x: p.x, y: p.y }; }),
   cellXY: (k, i) => { const c = P[k].cells[i]; return screenOf(new THREE.Vector3(c.x, .3, c.z)); },
+  markXY: (k, i, kd) => { const m = P[k].cells[i].mk && P[k].cells[i].mk[kd]; return m && m.visible ? screenOf(m.getWorldPosition(new THREE.Vector3())) : null; },
   PLpos: () => PL.g.position,
   care: { beginBed, endBed, leftSec, get on() { return bedOn; } },
   op: t => { if (!opOn) openOpening(); stT = t; },

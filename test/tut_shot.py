@@ -37,11 +37,10 @@ with sync_playwright() as p:
             elif T['type'] == 'water':
                 i = [c for c in T['cells'] if c not in T['got']][0]; pg.wait_for_timeout(900); click_cell(i)
             elif T['type'] == 'harvest':
-                if T['sel'] is None:
-                    i = [c for c in T['cells'] if c not in T['got']][0]; click_cell(i)
-                else:
-                    for q in pg.evaluate("() => __farm.picksNow()"):
-                        if q['d']['kind'] == 'crate': pg.mouse.click(q['x'], q['y']); break
+                i = [c for c in T['cells'] if c not in T['got']][0]
+                m = pg.evaluate('([k,i]) => __farm.markXY(k,i,"star")', [0, i])
+                if m and i % 2 == 0: pg.mouse.click(m['x'], m['y'])  # tap the floating star itself
+                else: click_cell(i)
             pg.wait_for_timeout(500)
     for step, nm in [(0, 'plant'), (1, 'water')]:
         assert tut() == step, (tut(), step)
