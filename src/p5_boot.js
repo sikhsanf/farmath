@@ -1,6 +1,7 @@
 /* ---------- boot ---------- */
 for (let k = 0; k < S.unl.plots; k++) { buildPlot(k); restorePlot(k); }
 if (S.unl.coop) coopG.visible = true;
+if (S.unl.pond) { pondG.visible = true; setPondFish(3); }
 if (S.unl.kios) { kiosG.visible = true; kiosCrop = -1; syncKios(); }
 syncHens(); buildPlayer(); refreshOffers();
 if (S.bld) { startConVis(ofrById(S.bld.id)); const q = conPoints()[0]; ELD.k.g.position.set(q.x, 0, q.z); }
@@ -18,5 +19,6 @@ window.__farm = {
   PLpos: () => PL.g.position,
   care: { beginBed, endBed, leftSec, get on() { return bedOn; } },
   op: t => { if (!opOn) openOpening(); stT = t; },
+  offerTap, tryFish, spawnCust, trySell,
   setState: o => { Object.assign(S, o); save(); refreshOffers(); updateHud(); }
 };

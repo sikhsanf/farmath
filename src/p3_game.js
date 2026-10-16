@@ -35,7 +35,7 @@ function popNum(v3, text) {
   $('app').appendChild(d); setTimeout(() => d.remove(), 1000);
 }
 function hudVis() {
-  const c = S.seenCoin || S.coins > 0 || S.done > 0, b = S.seenBasket || S.inv.some(v => v > 0) || S.eggs > 0;
+  const c = S.seenCoin || S.coins > 0 || S.done > 0, b = S.seenBasket || S.inv.some(v => v > 0) || S.eggs > 0 || S.fish > 0;
   if (c) S.seenCoin = true; if (b) S.seenBasket = true;
   [['chipC', c], ['prog', b]].forEach(([id, on]) => { const el = $(id); const was = el.style.display !== 'none'; el.style.display = on ? '' : 'none'; if (on && !was && started) bump(id); });
 }
@@ -43,6 +43,7 @@ function updateHud() {
   hudVis(); $('coinN').textContent = S.coins;
   const inv = CROPS.map((c, i) => S.inv[i] ? c.e + S.inv[i] : '').filter(Boolean);
   if (S.eggs) inv.push('🥚' + S.eggs);
+  if (S.fish) inv.push('🐟' + S.fish);
   $('prog').textContent = inv.length ? inv.join(' ') : '🧺 0';
   $('wave').style.display = S.snd ? '' : 'none';
   $('btnJoy').classList.toggle('on', !!S.jy);
@@ -125,7 +126,8 @@ const FOC = {
   overview: { x: 8.2, z: 8.6, w: 19.5, h: 11.6 },
   plot: k => ({ x: 6.2, z: PZ[k] + 1.6, w: 10.6, h: 6.6 }),
   coop: { x: 11.8, z: 3.3, w: 10, h: 7 },
-  kios: { x: 11.5, z: 10.6, w: 10.5, h: 7 }
+  kios: { x: 11.5, z: 10.6, w: 10.5, h: 7 },
+  pond: { x: 17.2, z: 7.6, w: 10.5, h: 7 }
 };
 const focus = (f, instant) => camTo(f.x, f.z, f.w, f.h, instant);
 const elderGo = (e, x, z, cb) => { e.tx = x; e.tz = z; e.cb = cb || null; };
@@ -162,7 +164,10 @@ const OFR = [
     pos: () => ({ x: 10.9 + S.hens * 1.2, z: 3.2 + (S.hens % 2) * .4 }), pl: () => ({ x: 10.3, z: 5.5 }), focus: () => FOC.coop },
   { id: 'kios', who: 'k', verb: 'bikin', label: 'kios', ghost: makeGhost('kios', 4.2, 1.6, 2.3),
     price: () => S.tut === 7 ? 5 : 14, avail: () => S.unl.coop && S.hens >= 1 && !S.unl.kios && (S.tut === 7 || S.tut >= TUT_N),
-    pos: () => ({ x: 12, z: 9.4 }), pl: () => ({ x: 8.3, z: 11.4 }), focus: () => FOC.kios }
+    pos: () => ({ x: 12, z: 9.4 }), pl: () => ({ x: 8.3, z: 11.4 }), focus: () => FOC.kios },
+  { id: 'pond', who: 'k', verb: 'bikin', label: 'kolam ikan', ghost: makeGhost('pond', 4.2, 4.2, .5),
+    price: () => 15, avail: () => S.tut >= TUT_N && S.unl.kios && !S.unl.pond,
+    pos: () => ({ x: POND.x, z: POND.z }), pl: () => ({ x: 15.6, z: 8.6 }), focus: () => FOC.pond }
 ];
 const ofrById = id => OFR.find(o => o.id === id);
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
@@ -170,7 +175,7 @@ const LOCKS = {};
 function lockFor(o) {
   if (LOCKS[o.id]) return LOCKS[o.id];
   const pr = o.ghost.box.geometry.parameters, g = new THREE.Group(); scene.add(g);
-  V(g, o.id === 'plot' ? 0xa07c55 : 0xa6cf86, pr.width, .05, pr.depth, 0, 0, 0, false);
+  V(g, o.id === 'plot' ? 0xa07c55 : o.id === 'pond' ? 0x7fc4e8 : 0xa6cf86, pr.width, .05, pr.depth, 0, 0, 0, false);
   const sx = -pr.width / 2 + .6, sz = pr.depth / 2 - .4;
   V(g, 0x8f5d2a, .12, .95, .12, sx, 0, sz, false); V(g, 0xc99a5b, .85, .55, .1, sx, .75, sz, false); V(g, 0xffd34d, .36, .36, .12, sx, .85, sz + .06, false); V(g, 0xffec99, .16, .16, .14, sx, .92, sz + .08, false);
   g.visible = false; return (LOCKS[o.id] = g);
@@ -213,7 +218,7 @@ let CON = null, conT = 0, patrolT = 0, patrolI = 0, hammerT = 0;
 function startConVis(o) {
   const pr = o.ghost.box.geometry.parameters, p = o.pos(), w = pr.width, d = pr.depth;
   const g = new THREE.Group(); g.position.set(p.x, 0, p.z); scene.add(g);
-  const col = { plot: 0x8a5a33, coop: 0xd9a766, kios: 0xc98e4f }[o.id], h = { plot: .3, coop: 1.1, kios: 1.5 }[o.id];
+  const col = { plot: 0x8a5a33, coop: 0xd9a766, kios: 0xc98e4f, pond: 0x4fb3ea }[o.id], h = { plot: .3, coop: 1.1, kios: 1.5, pond: .3 }[o.id];
   const piv = new THREE.Group(); g.add(piv); V(piv, col, w * .96, h, d * .96, 0, 0, 0); piv.scale.y = .05;
   [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(s => V(g, 0x8f5d2a, .14, h + .9, .14, s[0] * w / 2, 0, s[1] * d / 2));
   V(g, 0xe9d37a, .5, .3, .5, w / 2 + .5, 0, d / 2 + .3); V(g, 0xe9d37a, .5, .3, .5, w / 2 + .75, .3, d / 2 + .3);
@@ -222,7 +227,7 @@ function startConVis(o) {
 }
 function conPoints() {
   const { p, w, d } = CON;
-  return [[-w / 2 - .6, -d / 2 - .6], [w / 2 + .6, -d / 2 - .6], [w / 2 + .6, d / 2 + .6], [-w / 2 - .6, d / 2 + .6]].map(q => ({ x: clamp(p.x + q[0], .6, 15.4), z: clamp(p.z + q[1], .6, 15.4) }));
+  return [[-w / 2 - .6, -d / 2 - .6], [w / 2 + .6, -d / 2 - .6], [w / 2 + .6, d / 2 + .6], [-w / 2 - .6, d / 2 + .6]].map(q => ({ x: clamp(p.x + q[0], .6, 21), z: clamp(p.z + q[1], .6, 15.4) }));
 }
 function startBuild(o) {
   S.bld = { id: o.id, at: Date.now() + BUILD_MS, k: S.unl.plots }; save(); startConVis(o); refreshOffers();
@@ -247,7 +252,8 @@ function finishBuild() {
   if (CON) { scene.remove(CON.g); CON = null; } setChip('bar', null);
   if (b.id === 'plot') { const k = S.unl.plots; S.unl.plots++; const p = buildPlot(k); restorePlot(k); dropIn(p.g); fx = new THREE.Vector3(4.5, 1, PZ[k] + 1); }
   else if (b.id === 'coop') { S.unl.coop = true; coopG.visible = true; dropIn(coopG); }
-  else { S.unl.kios = true; kiosG.visible = true; dropIn(kiosG); }
+  else if (b.id === 'kios') { S.unl.kios = true; kiosG.visible = true; dropIn(kiosG); }
+  else { S.unl.pond = true; pondG.visible = true; setPondFish(3); dropIn(pondG); }
   save(); refreshOffers(); SFX.good(); burst(fx, CONF, 30, 5, .17, 1.3); ELD.k.cheer = 1.6; ELD.k.tx = null; ELD.k.armR.rotation.x = 0;
   const tutAdv = b.id === 'coop' && S.tut === 4 ? 5 : b.id === 'kios' && S.tut === 7 ? 8 : 0;
   if (!T) { focus(b.id === 'plot' ? FOC.plot(S.unl.plots - 1) : o.focus()); if (tutAdv) advTut(tutAdv); else tip('k', `Selesai! ${cap(o.label)} sudah jadi.`, 3.5); } else if (tutAdv) advTut(tutAdv);
@@ -466,19 +472,20 @@ TK.feed = {
 let CUST = null, custT = 4, kiosCrop = -1;
 function syncKios() {
   if (!S.unl.kios) return;
+  fishCrate.visible = !!S.unl.pond;
   const c = T && T.type === 'sell' ? T.cr : CUST ? CUST.cr : S.inv.indexOf(Math.max(...S.inv));
   if (c !== kiosCrop) { kiosCrop = c; setVegCrate(c); }
 }
 function spawnCust() {
-  const stock = [0, 1, 2, 3].filter(i => S.inv[i] > 0); if (!stock.length || S.eggs < 1) return;
-  const mx = maxN(), cr = pick(stock), A = rand(1, Math.min(S.inv[cr], mx - 1)), B = rand(1, Math.min(S.eggs, mx - A));
+  const stock = [0, 1, 2, 3].filter(i => S.inv[i] > 0), seconds = [S.eggs >= 1 ? 'egg' : null, S.fish >= 1 ? 'fish' : null].filter(Boolean); if (!stock.length || !seconds.length) return;
+  const mx = maxN(), cr = pick(stock), k2 = pick(seconds), A = rand(1, Math.min(S.inv[cr], mx - 1)), B = rand(1, Math.min(k2 === 'egg' ? S.eggs : S.fish, mx - A));
   const g = makeVillager(); g.position.set(18, 0, 13.4); scene.add(g); g.hit = H(g, .9, 1.7, .9, 0, 0, 0, { kind: 'cust' });
-  CUST = { g, cr, A, B, ready: false, busy: false };
+  CUST = { g, cr, A, B, k2, ready: false, busy: false };
   walkTo(g, 12.2, 13.4, 3.2, () => { if (CUST && CUST.g === g) { CUST.ready = true; g.rotation.y = Math.PI * .75; SFX.hello(); } });
 }
 function trySell() {
   if (!CUST || !CUST.ready) { tip('n', 'Belum ada pelanggan. Tunggu ya.'); return; }
-  if (CUST.busy) return; CUST.busy = true; startTask({ type: 'sell', cr: CUST.cr, A: CUST.A, B: CUST.B, cust: CUST });
+  if (CUST.busy) return; CUST.busy = true; startTask({ type: 'sell', cr: CUST.cr, A: CUST.A, B: CUST.B, k2: CUST.k2, cust: CUST });
 }
 function recount() {
   const t = T; if (!t) return; const items = t.basket.userData.items.filter(Boolean);
@@ -502,24 +509,25 @@ function sellAnswer(v, btn) {
     nudge('Hitung lagi ya.'); recount();
   }
 }
-const sellHL = () => setHL([T.a < T.A ? padOf(vegHit, 1.3, 1.0, .04) : null, T.b < T.B ? padOf(eggHit, 1.3, 1.0, .04) : null].filter(Boolean));
+const secHit = () => T.k2 === 'fish' ? fishHit : eggHit, secName = () => T.k2 === 'fish' ? 'ikan' : 'telur';
+const sellHL = () => setHL([T.a < T.A ? padOf(vegHit, 1.3, 1.0, .04) : null, T.b < T.B ? padOf(secHit(), 1.3, 1.0, .04) : null].filter(Boolean));
 TK.sell = {
   start() {
     const A = T.A, B = T.B, cn = CROPS[T.cr].name; T.a = 0; T.b = 0; T.phase = 'load'; T.fx = new THREE.Vector3(12, 1.4, 11); T.who = 'n';
     syncKios();
     elderGo(ELD.n, 8.5, 10.9); plGo(15, 12.2); focus(FOC.kios);
     T.basket = makeTray(10, 5, .42, 0xc98e4f, 0xa9783c); T.basket.position.set(12, 0, 11.4); scene.add(T.basket); popScale(T.basket, .2, .4);
-    header('n', `Pelanggan mau ${NUM[A]} ${cn} dan ${NUM[B]} telur.`, `${A} + ${B}`, [...dotsOf(A, 'a'), '+', ...dotsOf(B, 'b')]);
-    picks = [vegHit, eggHit]; sellHL();
+    header('n', `Pelanggan mau ${NUM[A]} ${cn} dan ${NUM[B]} ${secName()}.`, `${A} + ${B}`, [...dotsOf(A, 'a'), '+', ...dotsOf(B, 'b')]);
+    picks = [vegHit, secHit()]; sellHL();
   },
   tap(d) {
-    if (T.phase !== 'load' || (d.kind !== 'veg' && d.kind !== 'egg')) return;
+    if (T.phase !== 'load' || (d.kind !== 'veg' && d.kind !== (T.k2 === 'fish' ? 'fishs' : 'egg'))) return;
     const veg = d.kind === 'veg', have = veg ? T.a : T.b, want = veg ? T.A : T.B, cn = CROPS[T.cr].name;
-    if (have >= want) { nudge(veg ? `${cn} cukup, ${NUM[want]}.` : `Telurnya cukup, ${NUM[want]}.`); return; }
-    if (veg) { T.a++; S.inv[T.cr]--; } else { T.b++; S.eggs--; }
+    if (have >= want) { nudge(veg ? `${cn} cukup, ${NUM[want]}.` : `${cap(secName())}nya cukup, ${NUM[want]}.`); return; }
+    if (veg) { T.a++; S.inv[T.cr]--; } else { T.b++; if (T.k2 === 'fish') S.fish--; else S.eggs--; }
     updateHud(); save();
     const cnum = veg ? T.a : T.b, dotIx = veg ? T.a - 1 : T.A + T.b - 1, idx = T.a + T.b - 1;
-    const it = veg ? cropParts(T.cr).grown : makeEggItem(), s = veg ? .5 : 1, src = worldOf(veg ? vegHit : eggHit); it.userData.s = s; it.scale.setScalar(s); it.position.copy(src); it.position.y += .5;
+    const it = veg ? cropParts(T.cr).grown : T.k2 === 'fish' ? makeFishMesh(0xff9a3c) : makeEggItem(), s = veg ? .5 : T.k2 === 'fish' ? .8 : 1, src = worldOf(veg ? vegHit : secHit()); it.userData.s = s; it.scale.setScalar(s); it.position.copy(src); it.position.y += .5;
     trayPut(T.basket, idx, it, .55, 1.6);
     markDot(dotIx); SFX.pop(cnum); say(NUM[cnum], 'n'); popNum(new THREE.Vector3(src.x, 2.2, src.z), String(cnum));
     sellHL();
@@ -532,7 +540,7 @@ TK.sell = {
   },
   hint() {
     if (T.phase !== 'load') return { pos: null, text: 'Pilih angkanya ya.' };
-    const veg = T.a < T.A; return { pos: worldOf(veg ? vegHit : eggHit).add(new THREE.Vector3(0, 1.1, 0)), text: veg ? `Tap ${CROPS[T.cr].name}nya.` : 'Tap telurnya.' };
+    const veg = T.a < T.A; return { pos: worldOf(veg ? vegHit : secHit()).add(new THREE.Vector3(0, 1.1, 0)), text: veg ? `Tap ${CROPS[T.cr].name}nya.` : `Tap ${secName()}nya.` };
   }
 };
 function ask() {
@@ -542,6 +550,52 @@ function ask() {
   const vals = [...opts].sort(() => Math.random() - .5);
   t.text = 'Ada berapa semuanya?'; btext.textContent = t.text; say(t.text, 'n'); showChoices(vals, sellAnswer);
 }
+
+/* 6. FISH (Kakek): fishing is subtraction. A fish in the pond, catch N, how many are left? */
+function tryFish() { if (T || kakekBusy() || !S.unl.pond) return; if (FM != null) exitFarm(); startTask({ type: 'fish' }); }
+TK.fish = {
+  start() {
+    const mx = maxN(), N = rand(1, Math.min(mx - 1, 6)), R = rand(1, mx - N); T.N = N; T.R = R; T.A = N + R; T.phase = 'catch'; T.caught = new Set(); T.k = 0; T.who = 'k'; T.fx = new THREE.Vector3(POND.x, 1.3, POND.z);
+    setPondFish(T.A); elderGo(ELD.k, 16.9, 4.6); plGo(15.6, 8.8); focus(FOC.pond);
+    T.tray = makeTray(N, Math.min(N, 5), .42, 0xc98e4f, 0xa9783c); T.tray.position.set(POND.x, 0, POND.z + 3.3); scene.add(T.tray); popScale(T.tray, .2, .4);
+    header('k', `Ada ${NUM[T.A]} ikan di kolam. Tangkap ${NUM[N]} ikan! Tap ikannya.`, `${T.A} − ${N}`, dotsOf(N, 'n'));
+    TK.fish.refresh();
+    after(.9, () => { if (T && T.type === 'fish' && T.phase === 'catch' && T.k === 0 && !T.locked) { const f = FISH.find((x, i) => i < T.A && !T.caught.has(i)); if (f) showHandTap(worldOf(f.g)); } });
+  },
+  refresh() { picks = FISH.filter((f, i) => i < T.A && !T.caught.has(i)).map(f => f.hit); },
+  tap(d) { if (T.phase === 'catch' && d.kind === 'fish') TK.fish.take(d.i); },
+  catchAny() { const f = FISH.findIndex((x, i) => i < T.A && !T.caught.has(i)); if (f >= 0) TK.fish.take(f); },
+  take(i) {
+    if (T.phase !== 'catch' || T.caught.has(i) || i >= T.A) return;
+    T.caught.add(i); const f = FISH[i], w = worldOf(f.g), it = makeFishMesh(f.col); it.position.copy(w); f.g.visible = false;
+    const idx = T.k; T.k++; S.fish++; save(); updateHud(); markDot(idx); SFX.pop(T.k); say(NUM[T.k], 'k');
+    burst(w.clone().setY(.4), [0xbfe6ff, 0xffffff, 0x6cc0f2], 10, 2.6, .14, .8, 5); popNum(new THREE.Vector3(POND.x, 1.9, POND.z + 3.3), String(T.k));
+    trayPut(T.tray, idx, it, .6, 1.8); flyToHud('🐟', w, 1, 'prog');
+    TK.fish.refresh(); hideArrow();
+    if (T.k === T.N) { picks = []; after(1.0, () => { if (T && T.type === 'fish' && T.phase === 'catch') TK.fish.ask(); }); }
+  },
+  ask() {
+    const t = T; t.phase = 'ask'; picks = []; hideArrow();
+    const opts = new Set([t.R]); while (opts.size < 3) { const c = t.R + pick([-2, -1, 1, 2]); if (c >= 0 && c <= 10) opts.add(c); }
+    t.text = `Tadi ada ${NUM[t.A]}, kamu tangkap ${NUM[t.N]}. Sisa berapa ikan?`; btext.textContent = t.text; bnum.textContent = `${t.A} − ${t.N}`; say(t.text, 'k');
+    showChoices([...opts].sort(() => Math.random() - .5), TK.fish.answer);
+  },
+  answer(v, btn) {
+    const t = T; if (!t || t.type !== 'fish' || t.phase !== 'ask') return; t.idle = 0;
+    if (v === t.R) {
+      t.phase = 'done'; btn.classList.add('ok'); bnum.textContent = `${t.A} − ${t.N} = ${t.R}`; after(.7, () => { if (T === t) hideChoices(); });
+      complete(`${pick(PRAISE)} ${NUM[t.A]} kurang ${NUM[t.N]}, sisa ${NUM[t.R]}!`, Math.ceil(t.N / 2));
+    } else {
+      btn.classList.add('no'); setTimeout(() => btn.classList.remove('no'), 450); nudge('Hitung ikan yang masih berenang ya.');
+      let n = 0; FISH.forEach((f, i) => { if (i < t.A && !t.caught.has(i)) { n++; const c = n; after(.2 + c * .55, () => { if (T === t) { SFX.pop(c); say(NUM[c], 'k'); popNum(worldOf(f.g).add(new THREE.Vector3(0, .8, 0)), String(c)); hop(f.g, .3, .3); } }); } });
+    }
+  },
+  cleanup() {
+    const tray = T.tray; hideChoices(); tween(.5, k => tray.userData.items.forEach(it => it && it.scale.setScalar(1 - k)), () => { scene.remove(tray); }, 0, EZ.lin);
+    setPondFish(3);
+  },
+  hint() { if (T.phase !== 'catch') return { pos: null, text: 'Pilih angkanya ya.' }; const f = FISH.find((x, i) => i < T.A && !T.caught.has(i)); return f ? { pos: worldOf(f.g).add(new THREE.Vector3(0, .6, 0)), text: 'Tap ikannya.' } : null; }
+};
 
 /* ---------- hub: the child decides what to do by tapping the farm ---------- */
 /* which crops can be planted: 3 at first, the 4th comes with the second plot of land */
@@ -775,12 +829,17 @@ function updateChips() {
     const ce = chips['o' + o.id].el; if (!ce.onclick) { ce.onclick = () => { ac(); SFX.pop(2); offerTap(o); }; ce.onpointerdown = e => e.stopPropagation(); }
   });
   if (T && T.type === 'sell' && S.unl.kios) {
-    const v = worldOf(vegHit), e = worldOf(eggHit), kc = Math.max(0, kiosCrop);
+    const v = worldOf(vegHit), e = worldOf(secHit()), kc = Math.max(0, kiosCrop);
     setChip('kv', v.add(new THREE.Vector3(0, 1.1, 0)), CROPS[kc].e + ' ' + S.inv[kc], 'price tap');
-    setChip('ke', e.add(new THREE.Vector3(0, 1.1, 0)), '🥚 ' + S.eggs, 'price tap');
+    setChip('ke', e.add(new THREE.Vector3(0, 1.1, 0)), T.k2 === 'fish' ? '🐟 ' + S.fish : '🥚 ' + S.eggs, 'price tap');
     hookChip('kv', () => { if (T && T.type === 'sell' && !T.locked) { T.idle = 0; hideArrow(); TK.sell.tap({ kind: 'veg' }); } });
-    hookChip('ke', () => { if (T && T.type === 'sell' && !T.locked) { T.idle = 0; hideArrow(); TK.sell.tap({ kind: 'egg' }); } });
+    hookChip('ke', () => { if (T && T.type === 'sell' && !T.locked) { T.idle = 0; hideArrow(); TK.sell.tap({ kind: T.k2 === 'fish' ? 'fishs' : 'egg' }); } });
   } else { setChip('kv', null); setChip('ke', null); }
+  const fishing = T && T.type === 'fish' && T.phase === 'catch' && !T.locked;
+  setChip('fp', fishing ? new THREE.Vector3(POND.x, 1.7, POND.z) : null, '🐟 ' + (fishing ? T.A - T.k : ''), 'price tap');
+  hookChip('fp', () => { if (T && T.type === 'fish' && T.phase === 'catch' && !T.locked) { T.idle = 0; hideArrow(); TK.fish.catchAny(); } });
+  setChip('pf', S.unl.pond && !T && started && !touring && !stOn && FM == null && !S.bld ? new THREE.Vector3(POND.x, 1.7, POND.z) : null, '🎣', 'bub tap');
+  hookChip('pf', () => tryFish());
   setChip('fk', T && T.type === 'feed' && !T.locked ? new THREE.Vector3(SACK.position.x, 1.9, SACK.position.z) : null, '🌽', 'price tap');
   hookChip('fk', () => { if (T && T.type === 'feed' && !T.locked) { T.idle = 0; hideArrow(); TK.feed.tap({ kind: 'sack' }); } });
   setChip('farm', started && !T && !touring && S.fm ? new THREE.Vector3(1.5, 3.4, 1.2) : null, '🌱 ' + esc(S.fm), 'sign');
@@ -845,6 +904,7 @@ function allPicks() {
   OFR.forEach(o => { if (o.ghost.g.visible) hub.push(o.ghost.hit); });
   if (S.hens > 0) hub.push(SACK.userData.hit);
   if (S.unl.kios) hub.push(vegHit, eggHit);
+  if (S.unl.pond) hub.push(pondHit);
   BF.forEach(b => hub.push(b.hit));
   if (CUST && CUST.ready && !CUST.busy) hub.push(CUST.g.hit);
   return hub.concat(base);
@@ -877,6 +937,7 @@ canvas.addEventListener('pointerdown', e => {
     else if (d.kind === 'offer') offerTap(ofrById(d.id));
     else if (d.kind === 'sack') tryFeed();
     else if (d.kind === 'veg' || d.kind === 'egg' || d.kind === 'cust') trySell();
+    else if (d.kind === 'pond') tryFish();
     return;
   }
   if (!T.locked) { T.idle = 0; hideArrow(); TK[T.type].tap(d); }
@@ -953,6 +1014,7 @@ function frame(now) {
   if (stOn) { stTick(dt); renderer.render(stScene, stCam); return; }
   stepAnims(dt); stepPT(dt); stepWalkers(dt); stepElder(ELD.k, dt, tm); stepElder(ELD.n, dt, tm); stepJoy(dt); stepElder(PL, dt, tm); if (PL.joy) fencePL();
   if (S.unl.coop) HENS.forEach(h => { if (h.g.visible) stepHen(h, dt, tm); });
+  if (S.unl.pond) stepPond(tm);
   CLOUDS.forEach(c => { c.g.position.x = c.x0 + Math.sin(tm * .1 + c.ph) * 1.2; });
   const k = 1 - Math.exp(-dt * 4.2);
   cam.cx += (cam.x - cam.cx) * k; cam.cz += (cam.z - cam.cz) * k; cam.cw += (cam.w - cam.cw) * k; cam.ch += (cam.h - cam.ch) * k;

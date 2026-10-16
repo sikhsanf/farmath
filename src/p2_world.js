@@ -64,8 +64,8 @@ function buildBeyond() {
   for (let i = 0; i < 9; i++) { const q = out(), r = .35 + rnd() * .4; V(scene, 0x9a9aa3, r * 1.4, r, r * 1.2, q[0], 0, q[1]); V(scene, 0xb4b4bd, r, r * .5, r * .8, q[0] + .1, r, q[1]); }
   const fc = [0xff7aa8, 0xffe066, 0xffffff, 0xc9a0ff];
   for (let i = 0; i < 80; i++) { const q = out(); V(scene, 0x3f9e4a, .04, .2, .04, q[0], 0, q[1], false); V(scene, fc[i % 4], .14, .1, .14, q[0], .2, q[1], false); }
-  /* bare plots waiting for later, each with a little stake */
-  [[19.4, 5.2, 4.6, 2.6], [19.4, 9.4, 4.6, 2.6], [5, 19.2, 5, 2.6]].forEach(l => {
+  /* a bare plot waiting for later (the pond site east of the farm is sold separately), each with a little stake */
+  [[5, 19.2, 5, 2.6]].forEach(l => {
     V(scene, 0x9a7a52, l[2], .06, l[3], l[0], 0, l[1], false);
     V(scene, 0x8f5d2a, .1, .9, .1, l[0] - l[2] / 2 + .3, 0, l[1] + l[3] / 2 - .3, false); V(scene, 0xffd34d, .5, .34, .08, l[0] - l[2] / 2 + .3, .75, l[1] + l[3] / 2 - .3, false);
   });
@@ -186,7 +186,41 @@ function buildKios() {
   V(ec, 0xa9783c, 1.05, .34, .8, 0, 0, 0); V(ec, 0xe9d37a, .93, .04, .68, 0, .34, 0, false);
   [[-.25, -.12], [0, .14], [.25, -.1], [-.12, .16], [.14, .0]].forEach(p => { const e = makeEggItem(); e.position.set(p[0], .34, p[1]); ec.add(e); });
   eggHit = H(ec, 1.3, 1.1, 1.0, 0, 0, 0, { kind: 'egg' });
+  fishCrate = new THREE.Group(); fishCrate.position.set(0, 0, 1.95); kiosG.add(fishCrate);
+  V(fishCrate, 0xa9783c, 1.05, .34, .8, 0, 0, 0); V(fishCrate, 0x9fd3f2, .93, .04, .68, 0, .34, 0, false);
+  [[-.25, -.1, 0xff9a3c], [.1, .12, 0x5aa9e6], [.3, -.12, 0xff9a3c]].forEach(q => { const f = makeFishMesh(q[2]); f.scale.setScalar(.8); f.position.set(q[0], .42, q[1]); fishCrate.add(f); });
+  fishHit = H(fishCrate, 1.3, 1.1, 1.0, 0, 0, 0, { kind: 'fishs' });
   kiosG.visible = false;
+}
+/* ---------- the fish pond ---------- */
+let pondG = null, pondHit = null, fishCrate = null, fishHit = null; const POND = { x: 18.8, z: 7.4 }, FISH = [];
+function makeFishMesh(col) {
+  const g = new THREE.Group();
+  V(g, col, .5, .2, .24, 0, 0, 0, false); V(g, col, .22, .3, .08, -.34, -.04, 0, false); V(g, 0xffffff, .09, .09, .26, .13, .08, 0, false); V(g, 0x222222, .05, .05, .28, .17, .1, 0, false);
+  return g;
+}
+function buildPond() {
+  pondG = new THREE.Group(); pondG.position.set(POND.x, 0, POND.z); scene.add(pondG);
+  V(pondG, 0xcdb27a, 4.2, .08, 4.2, 0, 0, 0); V(pondG, 0x3f9fdc, 3.6, .1, 3.4, 0, .04, 0, false);
+  V(pondG, 0x8bd0f4, 1.1, .02, .5, -.6, .15, -.5, false); V(pondG, 0x8bd0f4, .7, .02, .4, .8, .15, .6, false);
+  [[-1.9, -1.8], [1.9, -1.8], [1.9, 1.8]].forEach(q => { V(pondG, 0x3d9a3d, .08, .7, .08, q[0], 0, q[1], false); V(pondG, 0x3d9a3d, .08, .5, .08, q[0] + .14, 0, q[1] + .08, false); V(pondG, 0x8a5a33, .1, .22, .1, q[0] + .07, .55, q[1], false); });
+  V(pondG, 0x8f5d2a, .1, .9, .1, -1.85, 0, 1.8, false); V(pondG, 0x4fa6e6, .5, .34, .08, -1.85, .75, 1.8, false);
+  pondHit = H(pondG, 3.6, .8, 3.4, 0, 0, 0, { kind: 'pond' });
+  const cols = [0xff9a3c, 0x5aa9e6, 0xff7aa8, 0xffd34d, 0xff9a3c, 0x5aa9e6, 0xff7aa8, 0xffd34d, 0xff9a3c, 0x5aa9e6];
+  for (let i = 0; i < 10; i++) {
+    const g = makeFishMesh(cols[i]); pondG.add(g); g.visible = false;
+    const f = { g, col: cols[i], ph: i * 2.1, sp: (.5 + (i % 4) * .13) * (i % 2 ? 1 : -1), rx: .5 + (i % 5) * .27, rz: .4 + (i % 3) * .38, cx: ((i * 37) % 7 - 3) * .13, cz: ((i * 53) % 7 - 3) * .1 };
+    f.hit = H(g, .95, .8, .95, 0, 0, 0, { kind: 'fish', i }); FISH.push(f);
+  }
+  pondG.visible = false;
+}
+function setPondFish(n) { FISH.forEach((f, i) => { f.g.visible = i < n; }); }
+function stepPond(t) {
+  FISH.forEach(f => {
+    if (!f.g.visible) return;
+    const a = f.ph + t * f.sp, x = f.cx + f.rx * Math.cos(a), z = f.cz + f.rz * Math.sin(a), dx = -f.rx * Math.sin(a) * Math.sign(f.sp), dz = f.rz * Math.cos(a) * Math.sign(f.sp);
+    f.g.position.set(x, .2 + Math.sin(t * 5 + f.ph) * .02, z); f.g.rotation.y = Math.atan2(-dz, dx);
+  });
 }
 let vegItems = [];
 function setVegCrate(c) {
@@ -231,4 +265,4 @@ function stepWalkers(dt) {
 buildGround();
 const CLOUDS = buildEnv();
 buildCoop();
-buildKios();
+buildKios(); buildPond();

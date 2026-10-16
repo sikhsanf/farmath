@@ -17,7 +17,7 @@ const PRAISE = ['Hebat!', 'Pintar!', 'Mantap!', 'Keren!', 'Bagus sekali!'];
 /* ---------- save state ---------- */
 const KEY = 'farmath_v02';
 const DEF = () => ({
-  done: 0, coins: 0, inv: [0, 0, 0, 0], eggs: 0, snd: true, mus: true, hens: 0, bld: null, av: null, hungryAt: 0, look: null, nm: '', fm: '', story: false, tour: false, tutC: false, tutH: false, tut: 0, tutV: 2, jy: false, vn: '', vo: true,
+  done: 0, coins: 0, inv: [0, 0, 0, 0], eggs: 0, fish: 0, snd: true, mus: true, hens: 0, bld: null, av: null, hungryAt: 0, look: null, nm: '', fm: '', story: false, tour: false, tutC: false, tutH: false, tut: 0, tutV: 2, jy: false, vn: '', vo: true,
   plots: [0, 1, 2, 3].map(() => ({ c: 0, cs: Array(10).fill(0), r: Array(10).fill(0) })),
   unl: { plots: 1, coop: false, kios: false }
 });
