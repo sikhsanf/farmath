@@ -817,7 +817,7 @@ function makeSack() {
 }
 
 /* ---------- Farmath p2: world ---------- */
-const GN = 16;
+const GN = 16, EX = 5;   /* the playable farm is 16x16; the island is EX tiles wider on every side (room to grow, not usable yet) */
 const PZ = [3.1, 6.3, 9.5, 12.7];            // z start of each 5x2 plot
 const YARD = { x0: 10, x1: 14, z0: 1, z1: 5 };
 const PATH_X = [7, 8];
@@ -832,19 +832,20 @@ function tileColor(x, z) {
   return n < .33 ? 0x7ccf5b : n < .66 ? 0x74c653 : 0x84d561;
 }
 function buildGround() {
-  const tiles = new THREE.InstancedMesh(G(1, .5, 1), new THREE.MeshLambertMaterial({ color: 0xffffff }), GN * GN);
+  const tiles = new THREE.InstancedMesh(G(1, .5, 1), new THREE.MeshLambertMaterial({ color: 0xffffff }), (GN + 2 * EX) * (GN + 2 * EX));
   const m4 = new THREE.Matrix4(), col = new THREE.Color();
   let i = 0;
-  for (let x = 0; x < GN; x++) for (let z = 0; z < GN; z++) {
+  for (let x = -EX; x < GN + EX; x++) for (let z = -EX; z < GN + EX; z++) {
     const y0 = isWater(x, z) ? -.72 : -.5;
     m4.makeTranslation(x + .5, y0 + .25, z + .5);
     tiles.setMatrixAt(i, m4); tiles.setColorAt(i, col.set(tileColor(x, z))); i++;
   }
   tiles.instanceMatrix.needsUpdate = true; tiles.instanceColor.needsUpdate = true;
   tiles.receiveShadow = true; scene.add(tiles);
-  V(scene, 0x9b6b43, GN, .9, GN, GN / 2, -1.4, GN / 2);
-  V(scene, 0x7d5636, GN - .8, .9, GN - .8, GN / 2, -2.3, GN / 2);
-  V(scene, 0x5f4128, GN - 2, .8, GN - 2, GN / 2, -3.1, GN / 2);
+  const W = GN + 2 * EX;
+  V(scene, 0x9b6b43, W, .9, W, GN / 2, -1.4, GN / 2);
+  V(scene, 0x7d5636, W - .8, .9, W - .8, GN / 2, -2.3, GN / 2);
+  V(scene, 0x5f4128, W - 2, .8, W - 2, GN / 2, -3.1, GN / 2);
 }
 
 function makeTree(x, z, s = 1) {
@@ -868,8 +869,27 @@ function buildBarn() {
   V(g, 0x9bd3ff, .4, .4, .06, .85, .85, 1.01);
   V(g, 0xe9d37a, .5, .35, .5, 1.6, 0, 1.5); V(g, 0xe9d37a, .5, .35, .5, 1.75, .35, 1.4);
 }
+/* the wider island: a wooden fence marks the farm, the land beyond it is wild (trees, rocks, flowers) with bare plots waiting to be opened one day */
+function buildBeyond() {
+  const post = (x, z) => V(scene, 0x8f5d2a, .16, .7, .16, x, 0, z, false);
+  const A = -.3, B = GN + .3;
+  for (let i = 0; i <= 17; i++) { const t = A + i * (B - A) / 17; post(t, A); post(t, B); post(A, t); post(B, t); }
+  [A, B].forEach(c => { V(scene, 0xc99a5b, B - A, .08, .07, GN / 2, .45, c, false); V(scene, 0xc99a5b, .07, .08, B - A, c, .45, GN / 2, false); });
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const out = () => { for (;;) { const x = -EX + .6 + rnd() * (GN + 2 * EX - 1.2), z = -EX + .6 + rnd() * (GN + 2 * EX - 1.2); if (x < -.9 || x > GN + .9 || z < -.9 || z > GN + .9) return [x, z]; } };
+  for (let i = 0; i < 16; i++) { const q = out(); makeTree(q[0], q[1], .9 + rnd() * .4); }
+  for (let i = 0; i < 14; i++) { const q = out(); makeBush(q[0], q[1]); }
+  for (let i = 0; i < 9; i++) { const q = out(), r = .35 + rnd() * .4; V(scene, 0x9a9aa3, r * 1.4, r, r * 1.2, q[0], 0, q[1]); V(scene, 0xb4b4bd, r, r * .5, r * .8, q[0] + .1, r, q[1]); }
+  const fc = [0xff7aa8, 0xffe066, 0xffffff, 0xc9a0ff];
+  for (let i = 0; i < 80; i++) { const q = out(); V(scene, 0x3f9e4a, .04, .2, .04, q[0], 0, q[1], false); V(scene, fc[i % 4], .14, .1, .14, q[0], .2, q[1], false); }
+  /* bare plots waiting for later, each with a little stake */
+  [[19.4, 5.2, 4.6, 2.6], [19.4, 9.4, 4.6, 2.6], [5, 19.2, 5, 2.6]].forEach(l => {
+    V(scene, 0x9a7a52, l[2], .06, l[3], l[0], 0, l[1], false);
+    V(scene, 0x8f5d2a, .1, .9, .1, l[0] - l[2] / 2 + .3, 0, l[1] + l[3] / 2 - .3, false); V(scene, 0xffd34d, .5, .34, .08, l[0] - l[2] / 2 + .3, .75, l[1] + l[3] / 2 - .3, false);
+  });
+}
 function buildEnv() {
-  buildBarn();
+  buildBarn(); buildBeyond();
   [[.8, 4.8, 1], [.8, 7.8, 1.05], [.8, 10.8, .95], [5, .7, 1], [8, .6, 1.1], [15.2, 2.2, 1]].forEach(t => makeTree(t[0], t[1], t[2]));
   [[14.9, 13.6], [1, 14.6], [5.5, 15.1], [9.5, 15.2], [15.1, 11.2], [14.7, 8.2]].forEach(b => makeBush(b[0], b[1]));
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
